@@ -1,0 +1,80 @@
+import express from 'express'
+import multer from 'multer'
+import path from 'path'
+import { fileURLToPath } from 'url'
+import * as db from '../db.js'
+import { authenticateToken } from '../middleware/auth.js'
+import fs from 'fs'
+
+const __dirname = path.dirname(fileURLToPath(import.meta.url))
+const uploadsDir = path.join(__dirname, '../uploads')
+
+if (!fs.existsSync(uploadsDir)) {
+  fs.mkdirSync(uploadsDir, { recursive: true })
+}
+
+const storage = multer.diskStorage({
+  destination: (req, file, cb) => {
+    cb(null, uploadsDir)
+  },
+  filename: (req, file, cb) => {
+    const ext = path.extname(file.originalname)
+    const name = path.basename(file.originalname, ext)
+    const filename = `${name}-${Date.now()}${ext}`
+    cb(null, filename)
+  }
+})
+
+const upload = multer({ storage })
+const router = express.Router()
+
+router.get('/', async (req, res) => {
+  try {
+    const media = await db.all('SELECT * FROM media ORDER BY created_at DESC')
+    res.json(media)
+  } catch (error) {
+    res.status(500).json({ error: error.message })
+  }
+})
+
+router.post('/upload', authenticateToken, upload.single('file'), async (req, res) => {
+  try {
+    if (!req.file) {
+      return res.status(400).json({ error: 'No file uploaded' })
+    }
+
+    const result = await db.run(
+      'INSERT INTO media (filename, url, mime_type, size) VALUES (?, ?, ?, ?)',
+      [
+        req.file.filename,
+        `/uploads/${req.file.filename}`,
+        req.file.mimetype,
+        req.file.size
+      ]
+    )
+
+    const media = await db.get('SELECT * FROM media WHERE id = ?', [result.lastID])
+    res.json(media)
+  } catch (error) {
+    res.status(500).json({ error: error.message })
+  }
+})
+
+router.delete('/:id', authenticateToken, async (req, res) => {
+  try {
+    const media = await db.get('SELECT * FROM media WHERE id = ?', [req.params.id])
+    if (!media) return res.status(404).json({ error: 'Media not found' })
+
+    const filePath = path.join(uploadsDir, media.filename)
+    if (fs.existsSync(filePath)) {
+      fs.unlinkSync(filePath)
+    }
+
+    await db.run('DELETE FROM media WHERE id = ?', [req.params.id])
+    res.json({ success: true })
+  } catch (error) {
+    res.status(500).json({ error: error.message })
+  }
+})
+
+export default router
