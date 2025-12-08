@@ -37,6 +37,10 @@ export const useContentStore = defineStore('content', () => {
   async function fetchPostBySlug(slug) {
     try {
       const response = await axios.get(`${API_BASE_URL}/api/posts/slug/${slug}`)
+      const existing = posts.value.find(p => p.slug === slug)
+      if (!existing && response.data) {
+        posts.value.push(response.data)
+      }
       return response.data
     } catch (error) {
       console.error('Failed to fetch post by slug:', error)

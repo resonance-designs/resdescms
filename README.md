@@ -1,5 +1,5 @@
 # ResDesCMS
-Version: **alpha** | Latest release: v0.1.3
+Version: **alpha** | Latest release: v0.1.4
 
 ## About
 A modern, full-featured CMS built with Vue 3 + Vite, Express.js, and SQLite.
@@ -17,6 +17,7 @@ A modern, full-featured CMS built with Vue 3 + Vite, Express.js, and SQLite.
 - Posts, pages, categories, navigation menus, media library
 - Multiple navigation menus with per-item targets; menu block element for layouts (horizontal/vertical)
 - Theme system with header/body/footer/sidebar builders and per-section spacing/borders
+- WordPress-style shortcodes for posts/pages/media in rich content
 - Admin panel with JWT auth and Pinia state
 - Tailwind CSS styling with custom theme tokens
 - SQLite-backed Express API
@@ -37,6 +38,11 @@ A modern, full-featured CMS built with Vue 3 + Vite, Express.js, and SQLite.
 
 ## Media & API base
 - Media uploads are served from the API (`/uploads/<file>`). If your frontend and backend run on different origins, set `VITE_API_BASE` to the API origin (e.g., `http://localhost:3001`) in your `.env` and restart `npm run dev` so media URLs and API calls resolve correctly.
+
+## Shortcodes
+- `[post slug="welcome-to-resdescms" display="full|medium|small|link"]` renders a post snippet or link.
+- `[page slug="about" display="link"]` renders a link to a page by slug.
+- `[media id="5" width="300px"]` renders an image from the media library (width optional).
 
 ## Changelog
 ### Latest Updates

@@ -1,5 +1,10 @@
 # Changelog
 
+## v0.1.4 (alpha)
+
+-   Added WordPress-style shortcodes for posts/pages/media in content.
+-   Documentation moved to `/docs` with updated links and architecture diagram cleanup.
+
 ## v0.1.3 (alpha)
 
 -   Centralized API base handling and added post-by-slug endpoint/usage.
