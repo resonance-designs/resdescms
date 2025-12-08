@@ -1,6 +1,7 @@
 <script setup>
 import { computed, onBeforeUnmount, onMounted, reactive, ref, watch } from 'vue'
 import { useContentStore } from '../../stores/content'
+import { resolveMediaUrl } from '../../utils/media'
 
 const model = defineModel({ type: Object, default: () => ({ cols: 4, rows: 4, gap: 16, blocks: [] }) })
 const contentStore = useContentStore()
@@ -34,14 +35,6 @@ const selectedBlock = computed(() => blocks.value.find(b => b.id === selectedId.
 const selectedElement = computed(() => selectedBlock.value?.elements?.find(el => el.id === selectedElementId.value))
 const mediaModal = reactive({ open: false, mode: 'single' })
 const mediaSelection = reactive(new Set())
-const apiBase = import.meta.env.VITE_API_BASE || 'http://localhost:3001'
-
-function resolveMediaUrl(url) {
-  if (!url) return ''
-  if (/^https?:\/\//i.test(url)) return url
-  if (url.startsWith('//')) return window.location.protocol + url
-  return `${apiBase}${url.startsWith('/') ? '' : '/'}${url}`
-}
 
 const cells = computed(() => Array.from({ length: rows.value * cols.value }, (_, i) => ({
   row: Math.floor(i / cols.value) + 1,
@@ -533,7 +526,7 @@ function confirmMediaSelection() {
                 >
                   <option value="">Select menu</option>
                   <option v-for="menu in contentStore.navigationMenus" :key="menu.id" :value="menu.id">
-                    {{ menu.name }} <span v-if="menu.is_default">(Default)</span>
+                    {{ menu.name }}{{ menu.is_default ? ' (Default)' : '' }}
                   </option>
                 </select>
               </div>

@@ -4,7 +4,7 @@
 Single-repo CMS with a Vue 3 + Vite SPA frontend and an Express + SQLite backend. State is managed with Pinia; themes and layouts drive rendering via stored JSON and CSS variables. Media and themes are served by the backend.
 
 ## Diagram (logical)
-```
+```text
 ┌─────────────────────┐        HTTP/JSON        ┌─────────────────────┐
 │  Vue 3 SPA (Vite)   │  ───────────────────▶   │  Express API        │
 │  - Router/Pinia     │   fetch/axios           │  - Routes: auth,    │

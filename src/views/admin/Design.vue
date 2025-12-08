@@ -3,10 +3,10 @@ import { computed, onMounted, ref, watch } from 'vue'
 import axios from 'axios'
 import { useThemeStore } from '../../stores/theme'
 import { useContentStore } from '../../stores/content'
+import { resolveMediaUrl, apiBase } from '../../utils/media'
 import PageBuilder from '../../components/admin/PageBuilder.vue'
 
 const themeStore = useThemeStore()
-const apiBase = import.meta.env.VITE_API_BASE || 'http://localhost:3001'
 
 const design = ref({
   primaryColor: '#FF6B35',
@@ -30,13 +30,6 @@ const mediaModal = ref({ open: false, target: null, mode: 'single' })
 const mediaSelection = ref(null)
 const contentStore = useContentStore()
 const fontSelection = ref(null)
-
-function resolveMediaUrl(url) {
-  if (!url) return ''
-  if (/^https?:\/\//i.test(url)) return url
-  if (url.startsWith('//')) return window.location.protocol + url
-  return `${apiBase}${url.startsWith('/') ? '' : '/'}${url}`
-}
 
 const activeTheme = computed(() => themeStore.activeTheme)
 const themeSubTab = ref('management')
@@ -155,7 +148,7 @@ onMounted(async () => {
 
 async function fetchDesign() {
   try {
-    const response = await axios.get('http://localhost:3001/api/design')
+    const response = await axios.get(`${apiBase}/api/design`)
     if (response.data) {
       design.value = {
         ...design.value,
@@ -169,7 +162,7 @@ async function fetchDesign() {
 
 async function saveDesign() {
   try {
-    await axios.post('http://localhost:3001/api/design', design.value)
+    await axios.post(`${apiBase}/api/design`, design.value)
     saved.value = true
     setTimeout(() => {
       saved.value = false

@@ -36,7 +36,7 @@ A modern, full-featured CMS built with Vue 3 + Vite, Express.js, and SQLite.
 - See [THEMEDEV.md](THEMEDEV.md) for theme authoring details.
 
 ## Media & API base
-- Media uploads are served from the API (`/uploads/<file>`). If your frontend and backend run on different origins, set `VITE_API_BASE` to the API origin (e.g., `http://localhost:3001`) in your `.env` and restart `npm run dev` so media URLs resolve correctly.
+- Media uploads are served from the API (`/uploads/<file>`). If your frontend and backend run on different origins, set `VITE_API_BASE` to the API origin (e.g., `http://localhost:3001`) in your `.env` and restart `npm run dev` so media URLs and API calls resolve correctly.
 
 ## Changelog
 ### Latest Updates

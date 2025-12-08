@@ -1,5 +1,5 @@
 <script setup>
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, computed } from 'vue'
 import { useContentStore } from '../../stores/content'
 
 const contentStore = useContentStore()
@@ -19,7 +19,8 @@ async function loadMenus(targetMenuId = null) {
   await contentStore.fetchNavigationMenus()
   menus.value = contentStore.navigationMenus
   const defaultMenu = menus.value.find(m => m.is_default) || menus.value[0]
-  selectedMenuId.value = targetMenuId || defaultMenu?.id || null
+  const targetExists = targetMenuId && menus.value.find(m => m.id === targetMenuId)
+  selectedMenuId.value = targetExists ? targetMenuId : (defaultMenu?.id || null)
   hydrateItems()
 }
 
@@ -103,9 +104,6 @@ async function deleteMenu(menuId) {
   if (!confirm('Delete this menu?')) return
   await contentStore.deleteNavigationMenu(menuId)
   await loadMenus()
-  if (selectedMenuId.value === menuId) {
-    hydrateItems()
-  }
 }
 
 function menuLabel(menu) {
@@ -113,7 +111,7 @@ function menuLabel(menu) {
   return `${menu.name}${menu.is_default ? ' (Default)' : ''}`
 }
 
-const currentMenu = () => menus.value.find(m => m.id === selectedMenuId.value)
+const currentMenu = computed(() => menus.value.find(m => m.id === selectedMenuId.value))
 </script>
 
 <template>
@@ -170,7 +168,7 @@ const currentMenu = () => menus.value.find(m => m.id === selectedMenuId.value)
     <div v-else>
       <div class="flex items-center justify-between mb-4">
         <div>
-          <h4 class="text-md font-semibold text-gray-900">Editing {{ menuLabel(currentMenu()) }}</h4>
+          <h4 class="text-md font-semibold text-gray-900">Editing {{ menuLabel(currentMenu) }}</h4>
           <p class="text-sm text-gray-600">Link to existing pages or add custom URLs.</p>
         </div>
         <button @click="addNavItem" class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">

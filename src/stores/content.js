@@ -2,6 +2,8 @@ import { defineStore } from 'pinia'
 import { ref } from 'vue'
 import axios from 'axios'
 
+const API_BASE_URL = (import.meta.env.VITE_API_BASE || 'http://localhost:3001').replace(/\/+$/, '')
+
 export const useContentStore = defineStore('content', () => {
   const posts = ref([])
   const pages = ref([])
@@ -13,7 +15,7 @@ export const useContentStore = defineStore('content', () => {
   async function fetchPosts() {
     try {
       loading.value = true
-      const response = await axios.get('http://localhost:3001/api/posts')
+      const response = await axios.get(`${API_BASE_URL}/api/posts`)
       posts.value = response.data
     } catch (error) {
       console.error('Failed to fetch posts:', error)
@@ -24,7 +26,7 @@ export const useContentStore = defineStore('content', () => {
 
   async function fetchPost(id) {
     try {
-      const response = await axios.get(`http://localhost:3001/api/posts/${id}`)
+      const response = await axios.get(`${API_BASE_URL}/api/posts/${id}`)
       return response.data
     } catch (error) {
       console.error('Failed to fetch post:', error)
@@ -34,7 +36,7 @@ export const useContentStore = defineStore('content', () => {
 
   async function createPost(post) {
     try {
-      const response = await axios.post('http://localhost:3001/api/posts', post)
+      const response = await axios.post(`${API_BASE_URL}/api/posts`, post)
       posts.value.push(response.data)
       return response.data
     } catch (error) {
@@ -45,7 +47,7 @@ export const useContentStore = defineStore('content', () => {
 
   async function updatePost(id, post) {
     try {
-      const response = await axios.put(`http://localhost:3001/api/posts/${id}`, post)
+      const response = await axios.put(`${API_BASE_URL}/api/posts/${id}`, post)
       const index = posts.value.findIndex(p => p.id === id)
       if (index > -1) posts.value[index] = response.data
       return response.data
@@ -57,7 +59,7 @@ export const useContentStore = defineStore('content', () => {
 
   async function deletePost(id) {
     try {
-      await axios.delete(`http://localhost:3001/api/posts/${id}`)
+      await axios.delete(`${API_BASE_URL}/api/posts/${id}`)
       posts.value = posts.value.filter(p => p.id !== id)
     } catch (error) {
       console.error('Failed to delete post:', error)
@@ -68,7 +70,7 @@ export const useContentStore = defineStore('content', () => {
   async function fetchPages() {
     try {
       loading.value = true
-      const response = await axios.get('http://localhost:3001/api/pages')
+      const response = await axios.get(`${API_BASE_URL}/api/pages`)
       pages.value = response.data
     } catch (error) {
       console.error('Failed to fetch pages:', error)
@@ -79,7 +81,7 @@ export const useContentStore = defineStore('content', () => {
 
   async function fetchPage(id) {
     try {
-      const response = await axios.get(`http://localhost:3001/api/pages/${id}`)
+      const response = await axios.get(`${API_BASE_URL}/api/pages/${id}`)
       return response.data
     } catch (error) {
       console.error('Failed to fetch page:', error)
@@ -89,7 +91,7 @@ export const useContentStore = defineStore('content', () => {
 
   async function fetchPageBySlug(slug) {
     try {
-      const response = await axios.get(`http://localhost:3001/api/pages/slug/${slug}`)
+      const response = await axios.get(`${API_BASE_URL}/api/pages/slug/${slug}`)
       return response.data
     } catch (error) {
       console.error('Failed to fetch page by slug:', error)
@@ -99,7 +101,7 @@ export const useContentStore = defineStore('content', () => {
 
   async function createPage(page) {
     try {
-      const response = await axios.post('http://localhost:3001/api/pages', page)
+      const response = await axios.post(`${API_BASE_URL}/api/pages`, page)
       pages.value.push(response.data)
       return response.data
     } catch (error) {
@@ -110,7 +112,7 @@ export const useContentStore = defineStore('content', () => {
 
   async function updatePage(id, page) {
     try {
-      const response = await axios.put(`http://localhost:3001/api/pages/${id}`, page)
+      const response = await axios.put(`${API_BASE_URL}/api/pages/${id}`, page)
       const index = pages.value.findIndex(p => p.id === id)
       if (index > -1) pages.value[index] = response.data
       return response.data
@@ -122,7 +124,7 @@ export const useContentStore = defineStore('content', () => {
 
   async function deletePage(id) {
     try {
-      await axios.delete(`http://localhost:3001/api/pages/${id}`)
+      await axios.delete(`${API_BASE_URL}/api/pages/${id}`)
       pages.value = pages.value.filter(p => p.id !== id)
     } catch (error) {
       console.error('Failed to delete page:', error)
@@ -132,7 +134,7 @@ export const useContentStore = defineStore('content', () => {
 
   async function fetchMedia() {
     try {
-      const response = await axios.get('http://localhost:3001/api/media')
+      const response = await axios.get(`${API_BASE_URL}/api/media`)
       media.value = response.data
     } catch (error) {
       console.error('Failed to fetch media:', error)
@@ -143,7 +145,7 @@ export const useContentStore = defineStore('content', () => {
     try {
       const formData = new FormData()
       formData.append('file', file)
-      const response = await axios.post('http://localhost:3001/api/media/upload', formData)
+      const response = await axios.post(`${API_BASE_URL}/api/media/upload`, formData)
       media.value.push(response.data)
       return response.data
     } catch (error) {
@@ -154,7 +156,7 @@ export const useContentStore = defineStore('content', () => {
 
   async function deleteMedia(id) {
     try {
-      await axios.delete(`http://localhost:3001/api/media/${id}`)
+      await axios.delete(`${API_BASE_URL}/api/media/${id}`)
       media.value = media.value.filter(m => m.id !== id)
     } catch (error) {
       console.error('Failed to delete media:', error)
@@ -164,7 +166,7 @@ export const useContentStore = defineStore('content', () => {
 
   async function fetchNavigationMenus() {
     try {
-      const response = await axios.get('http://localhost:3001/api/navigation')
+      const response = await axios.get(`${API_BASE_URL}/api/navigation`)
       navigationMenus.value = response.data?.menus || []
       return navigationMenus.value
     } catch (error) {
@@ -175,7 +177,7 @@ export const useContentStore = defineStore('content', () => {
 
   async function createNavigationMenu(menu) {
     try {
-      const { data } = await axios.post('http://localhost:3001/api/navigation', menu)
+      const { data } = await axios.post(`${API_BASE_URL}/api/navigation`, menu)
       await fetchNavigationMenus()
       return data?.menu || null
     } catch (error) {
@@ -186,7 +188,7 @@ export const useContentStore = defineStore('content', () => {
 
   async function updateNavigationMenu(id, payload) {
     try {
-      const { data } = await axios.put(`http://localhost:3001/api/navigation/${id}`, payload)
+      const { data } = await axios.put(`${API_BASE_URL}/api/navigation/${id}`, payload)
       await fetchNavigationMenus()
       return data?.menu || null
     } catch (error) {
@@ -197,7 +199,7 @@ export const useContentStore = defineStore('content', () => {
 
   async function updateNavigationItems(menuId, items) {
     try {
-      const { data } = await axios.put(`http://localhost:3001/api/navigation/${menuId}/items`, { items })
+      const { data } = await axios.put(`${API_BASE_URL}/api/navigation/${menuId}/items`, { items })
       await fetchNavigationMenus()
       return data?.menu || null
     } catch (error) {
@@ -208,8 +210,8 @@ export const useContentStore = defineStore('content', () => {
 
   async function deleteNavigationMenu(id) {
     try {
-      await axios.delete(`http://localhost:3001/api/navigation/${id}`)
-      return fetchNavigationMenus()
+      await axios.delete(`${API_BASE_URL}/api/navigation/${id}`)
+      await fetchNavigationMenus()
     } catch (error) {
       console.error('Failed to delete navigation menu:', error)
       throw error
@@ -218,7 +220,7 @@ export const useContentStore = defineStore('content', () => {
 
   async function fetchCategories(type) {
     try {
-      const url = type ? `http://localhost:3001/api/categories/${type}` : 'http://localhost:3001/api/categories'
+      const url = type ? `${API_BASE_URL}/api/categories/${type}` : `${API_BASE_URL}/api/categories`
       const response = await axios.get(url)
       categories.value = response.data
     } catch (error) {
@@ -228,7 +230,7 @@ export const useContentStore = defineStore('content', () => {
 
   async function createCategory(category) {
     try {
-      const response = await axios.post('http://localhost:3001/api/categories', category)
+      const response = await axios.post(`${API_BASE_URL}/api/categories`, category)
       categories.value.push(response.data)
       return response.data
     } catch (error) {
@@ -239,7 +241,7 @@ export const useContentStore = defineStore('content', () => {
 
   async function updateCategory(id, category) {
     try {
-      const response = await axios.put(`http://localhost:3001/api/categories/${id}`, category)
+      const response = await axios.put(`${API_BASE_URL}/api/categories/${id}`, category)
       const index = categories.value.findIndex(c => c.id === id)
       if (index > -1) categories.value[index] = response.data
       return response.data
@@ -251,7 +253,7 @@ export const useContentStore = defineStore('content', () => {
 
   async function deleteCategory(id) {
     try {
-      await axios.delete(`http://localhost:3001/api/categories/${id}`)
+      await axios.delete(`${API_BASE_URL}/api/categories/${id}`)
       categories.value = categories.value.filter(c => c.id !== id)
     } catch (error) {
       console.error('Failed to delete category:', error)
@@ -268,6 +270,7 @@ export const useContentStore = defineStore('content', () => {
     loading,
     fetchPosts,
     fetchPost,
+    fetchPostBySlug,
     createPost,
     updatePost,
     deletePost,
@@ -291,3 +294,12 @@ export const useContentStore = defineStore('content', () => {
     deleteNavigationMenu
   }
 })
+  async function fetchPostBySlug(slug) {
+    try {
+      const response = await axios.get(`${API_BASE_URL}/api/posts/slug/${slug}`)
+      return response.data
+    } catch (error) {
+      console.error('Failed to fetch post by slug:', error)
+      return null
+    }
+  }
