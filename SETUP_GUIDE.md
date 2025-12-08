@@ -28,7 +28,7 @@ npm run dev
 Starts Vite on `http://localhost:5173`.
 
 If your frontend and backend run on different origins/ports, create a `.env` in the project root with:
-```
+```bash
 VITE_API_BASE=http://localhost:3001
 ```
 Restart `npm run dev` after setting this so media URLs and API calls resolve correctly.

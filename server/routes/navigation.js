@@ -47,15 +47,19 @@ router.post('/', authenticateToken, async (req, res) => {
     const baseSlug = slugify(name)
     let uniqueSlug = baseSlug
     let counter = 1
+    const maxAttempts = 100
     // ensure slug uniqueness
     // eslint-disable-next-line no-constant-condition
-    while (true) {
+    while (counter <= maxAttempts) {
       // sqlite driver returns undefined if not found
       // eslint-disable-next-line no-await-in-loop
       const existing = await db.get('SELECT id FROM navigation_menus WHERE slug = ?', [uniqueSlug])
       if (!existing) break
       counter += 1
       uniqueSlug = `${baseSlug}-${counter}`
+    }
+    if (counter > maxAttempts) {
+      return res.status(400).json({ error: 'Unable to generate unique slug' })
     }
 
     if (isDefault) {
@@ -79,6 +83,11 @@ router.put('/:id', authenticateToken, async (req, res) => {
   try {
     const { id } = req.params
     const { name, is_default: isDefault } = req.body
+
+    const existing = await db.get('SELECT id FROM navigation_menus WHERE id = ?', [id])
+    if (!existing) {
+      return res.status(404).json({ error: 'Menu not found' })
+    }
 
     if (isDefault) {
       await db.run('UPDATE navigation_menus SET is_default = 0')
@@ -106,6 +115,11 @@ router.put('/:id/items', authenticateToken, async (req, res) => {
   try {
     const { id } = req.params
     const { items } = req.body
+
+    const menu = await db.get('SELECT id FROM navigation_menus WHERE id = ?', [id])
+    if (!menu) {
+      return res.status(404).json({ error: 'Menu not found' })
+    }
 
     await db.run('DELETE FROM navigation_items WHERE menu_id = ?', [id])
 

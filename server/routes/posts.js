@@ -17,6 +17,20 @@ router.get('/', async (req, res) => {
   }
 })
 
+router.get('/slug/:slug', async (req, res) => {
+  try {
+    const post = await db.get(`
+      SELECT p.*, c.name as category_name FROM posts p
+      LEFT JOIN categories c ON p.category_id = c.id
+      WHERE p.slug = ?
+    `, [req.params.slug])
+    if (!post) return res.status(404).json({ error: 'Post not found' })
+    res.json(post)
+  } catch (error) {
+    res.status(500).json({ error: error.message })
+  }
+})
+
 router.get('/:id', async (req, res) => {
   try {
     const post = await db.get(`

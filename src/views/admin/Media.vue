@@ -1,21 +1,13 @@
 <script setup>
 import { ref, onMounted } from 'vue'
 import { useContentStore } from '../../stores/content'
+import { resolveMediaUrl } from '../../utils/media'
 
 const contentStore = useContentStore()
 const media = ref([])
 const loading = ref(false)
 const uploading = ref(false)
 const selectedFile = ref(null)
-const apiBase = import.meta.env.VITE_API_BASE || 'http://localhost:3001'
-
-function resolveMediaUrl(url) {
-  if (!url) return ''
-  if (/^https?:\/\//i.test(url)) return url
-  if (url.startsWith('//')) return window.location.protocol + url
-  return `${apiBase}${url.startsWith('/') ? '' : '/'}${url}`
-}
-
 onMounted(async () => {
   loading.value = true
   await contentStore.fetchMedia()

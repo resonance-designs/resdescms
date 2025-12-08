@@ -32,7 +32,10 @@ onMounted(async () => {
     posts: contentStore.posts.length,
     pages: contentStore.pages.length,
     media: contentStore.media.length,
-    navigation: contentStore.navigationMenus.reduce((sum, menu) => sum + (menu.items?.length || 0), 0)
+    navigation: (contentStore.navigationMenus || []).reduce(
+      (sum, menu) => sum + (menu.items?.length || 0),
+      0
+    )
   }
 
   recentPosts.value = contentStore.posts
