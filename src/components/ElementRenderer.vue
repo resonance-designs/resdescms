@@ -45,7 +45,7 @@ export default {
 
           const links = items.map(item => {
             const isExternal = item.url?.startsWith('http')
-            const to = item.page_id ? `/page/${item.page_slug || ''}` : item.url || '#'
+            const to = item.page_id && item.page_slug ? `/page/${item.page_slug}` : item.url || '#'
             const target = item.target === '_blank' ? '_blank' : '_self'
             if (!isExternal && to?.startsWith('/') && target !== '_blank') {
               return h(RouterLink, { to, class: 'text-rd-orange hover:underline' }, () => item.label || to)

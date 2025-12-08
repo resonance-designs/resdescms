@@ -34,6 +34,16 @@ export const useContentStore = defineStore('content', () => {
     }
   }
 
+  async function fetchPostBySlug(slug) {
+    try {
+      const response = await axios.get(`${API_BASE_URL}/api/posts/slug/${slug}`)
+      return response.data
+    } catch (error) {
+      console.error('Failed to fetch post by slug:', error)
+      return null
+    }
+  }
+
   async function createPost(post) {
     try {
       const response = await axios.post(`${API_BASE_URL}/api/posts`, post)
@@ -294,12 +304,3 @@ export const useContentStore = defineStore('content', () => {
     deleteNavigationMenu
   }
 })
-  async function fetchPostBySlug(slug) {
-    try {
-      const response = await axios.get(`${API_BASE_URL}/api/posts/slug/${slug}`)
-      return response.data
-    } catch (error) {
-      console.error('Failed to fetch post by slug:', error)
-      return null
-    }
-  }

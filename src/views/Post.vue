@@ -12,9 +12,8 @@ const themeStore = useThemeStore()
 const post = ref(null)
 async function loadPost(slug) {
   post.value = await contentStore.fetchPostBySlug(slug)
-  if (!post.value) {
-    await contentStore.fetchPosts()
-    post.value = contentStore.posts.find(p => p.slug === slug)
+  if (!post.value && contentStore.posts.length) {
+    post.value = contentStore.posts.find(p => p.slug === slug) || null
   }
   if (!contentStore.navigationMenus.length) {
     await contentStore.fetchNavigationMenus()
