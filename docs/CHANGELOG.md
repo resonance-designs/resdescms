@@ -2,11 +2,11 @@
 
 ## v0.2.1 (alpha)
 -   Plugin added: GitLink (GitHub Linking); OAuth configurable from the admin UI (Client ID/Secret/redirect).
--   Plugin admin UIs load from plugin manifests (`adminView`), keeping plugin frontends (e.g., GLink/GitLink) inside each plugin directory.
+-   Plugin admin UIs load from plugin manifests (`adminView`), keeping plugin frontends (e.g., GLink/GitLink) inside each plugin directory. GLink now supports optional admin tracking toggle and testing mode for GA tags.
 
 ## v0.2.0 (alpha)
 
--   Plugin architecture mounts plugin routes from `server/plugins/<slug>/routes.js`; admin menus render only when the plugin is active (no plugin code in core).
+-   Plugin architecture mounts plugin routes from `server/plugins/<slug>/routes.js`; admin menus render only when the plugin is active (no plugin code in core). Multiple plugins can be active simultaneously.
 -   Plugin system shipped with GLink (Google Analytics/AdSense); OAuth configurable from the admin UI (Client ID/Secret/redirect) with account/property selection. Account/property/stream picker, testing-mode GA tag injection.
 -   Plugin admin: deactivate hides routes/menus; delete supports removing files and (optionally) data via confirm modal.
 

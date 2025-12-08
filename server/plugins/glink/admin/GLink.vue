@@ -1,7 +1,7 @@
 <script setup>
 import { onMounted, reactive, ref } from 'vue'
 import axios from 'axios'
-import { usePluginStore } from '../../../src/stores/plugins'
+import { usePluginStore } from '/src/stores/plugins'
 
 const API_BASE_URL = (import.meta.env.VITE_API_BASE || 'http://localhost:3001').replace(/\/+$/, '')
 const pluginStore = usePluginStore()
@@ -16,7 +16,8 @@ const form = reactive({
   gaPropertyId: '',
   gaPropertyName: '',
   headSnippet: '',
-  testing: false
+  testing: false,
+  trackAdmin: false
 })
 const loading = ref(false)
 const connecting = ref(false)
@@ -329,6 +330,10 @@ async function createProperty() {
     <div class="flex items-center gap-2">
       <input id="testing" v-model="form.testing" type="checkbox" class="h-4 w-4 text-rd-orange border-gray-300 rounded">
       <label for="testing" class="text-sm text-gray-800">Testing mode (sets GA cookie_domain to "none")</label>
+    </div>
+    <div class="flex items-center gap-2">
+      <input id="trackAdmin" v-model="form.trackAdmin" type="checkbox" class="h-4 w-4 text-rd-orange border-gray-300 rounded">
+      <label for="trackAdmin" class="text-sm text-gray-800">Track Admin Usage (inject GA into admin pages)</label>
     </div>
 
     <div>

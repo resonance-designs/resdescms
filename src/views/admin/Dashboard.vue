@@ -33,6 +33,7 @@ onMounted(async () => {
   if (!pluginStore.plugins.length) {
     await pluginStore.fetchPlugins()
   }
+  pluginStore.injectClientScripts({ includeAdmin: true })
   await contentStore.fetchPosts()
   await contentStore.fetchPages()
   await contentStore.fetchMedia()
@@ -238,7 +239,7 @@ function getPageTitle() {
           <h2 class="text-3xl font-bold text-gray-900">{{ getPageTitle() }}</h2>
         </div>
         <div class="p-6">
-          <RouterView />
+          <RouterView :key="$route.fullPath" />
         </div>
       </div>
     </div>

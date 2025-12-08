@@ -103,7 +103,7 @@ Plugins can be uploaded/activated in **Admin -> Plugins**. Each plugin mounts it
 2. In Google Cloud Console, create an OAuth Client (Web application) and add the redirect URI shown in the UI (defaults to `http://localhost:3001/api/plugins/glink/callback`).
 3. Enable the Google Analytics Admin/Data API and Analytics Admin scopes.
 4. Paste the Client ID and Client Secret into the GLink UI, save, then click **Connect to Google**.
-5. After consent, choose an Analytics account/property/stream in the UI and save to inject the GA4 tag. Testing mode sets `cookie_domain` to `none` for the tag.
+5. After consent, choose an Analytics account/property/stream in the UI and save to inject the GA4 tag. Testing mode sets `cookie_domain` to `none` for the tag. Enable “Track Admin Usage” if you want GA injected on admin routes.
 Optional env vars: `GLINK_CLIENT_ID`, `GLINK_CLIENT_SECRET`, `GLINK_REDIRECT_URI`.
 
 **GitLink (bundled)** connects a GitHub account:

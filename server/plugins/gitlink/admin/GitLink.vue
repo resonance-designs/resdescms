@@ -1,7 +1,7 @@
 <script setup>
 import { onMounted, reactive, ref } from 'vue'
 import axios from 'axios'
-import { usePluginStore } from '../../../src/stores/plugins'
+import { usePluginStore } from '/src/stores/plugins'
 
 const API_BASE_URL = (import.meta.env.VITE_API_BASE || 'http://localhost:3001').replace(/\/+$/, '')
 const pluginStore = usePluginStore()

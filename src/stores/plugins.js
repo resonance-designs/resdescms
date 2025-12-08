@@ -68,7 +68,7 @@ export const usePluginStore = defineStore('plugins', () => {
     return plugins.value.filter(p => p.isActive)
   }
 
-  function injectClientScripts() {
+  function injectClientScripts({ includeAdmin = false } = {}) {
     const head = document.head
     let currentGaId = null
 
@@ -78,7 +78,10 @@ export const usePluginStore = defineStore('plugins', () => {
 
     activePlugins().forEach(plugin => {
       if (plugin.slug === 'glink') {
-        const { gaId, headSnippet, testing } = plugin.settings || {}
+        const { gaId, headSnippet, testing, trackAdmin } = plugin.settings || {}
+        if (!includeAdmin && trackAdmin === false && window.location.pathname.startsWith('/admin')) {
+          return
+        }
         currentGaId = gaId || null
         if (currentGaId && injectedGaId.value && injectedGaId.value !== currentGaId) {
           removeExisting()

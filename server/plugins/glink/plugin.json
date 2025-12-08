@@ -19,6 +19,7 @@
     "clientId": "",
     "clientSecret": "",
     "redirectUri": "http://localhost:3001/api/plugins/glink/callback",
-    "testing": false
+    "testing": false,
+    "trackAdmin": false
   }
 }

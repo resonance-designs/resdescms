@@ -12,7 +12,7 @@ async function ensureDir(dirPath) {
 }
 
 async function loadManifestFromDir(pluginDir, fallbackManifest) {
-  let manifest = fallbackManifest || null
+  let manifest = null
 
   const functionsPath = path.join(pluginDir, 'functions.js')
   if (fs.existsSync(functionsPath)) {
@@ -21,11 +21,14 @@ async function loadManifestFromDir(pluginDir, fallbackManifest) {
     manifest = mod.default || mod
   }
 
-  if (!manifest) {
-    const jsonPath = path.join(pluginDir, 'plugin.json')
-    if (fs.existsSync(jsonPath)) {
-      manifest = JSON.parse(await fs.promises.readFile(jsonPath, 'utf-8'))
-    }
+  const jsonPath = path.join(pluginDir, 'plugin.json')
+  if (!manifest && fs.existsSync(jsonPath)) {
+    manifest = JSON.parse(await fs.promises.readFile(jsonPath, 'utf-8'))
+  }
+
+  // merge fallback manifest (from DB) if present but prefer on-disk values
+  if (fallbackManifest) {
+    manifest = { ...fallbackManifest, ...(manifest || {}) }
   }
 
   return manifest
@@ -54,6 +57,7 @@ export async function hydratePlugin(row) {
     settings,
     manifest: manifest || {},
     adminMenu: manifest.adminMenu || [],
+    adminView: manifest.adminView || manifest.admin_view || `/server/plugins/${row.slug}/admin/index.vue`,
     client: manifest.client || {}
   }
 }
@@ -108,7 +112,6 @@ export async function activatePlugin(slug) {
   if (!existing) {
     throw new Error('Plugin not found')
   }
-  await db.run('UPDATE rdcms_plugins SET is_active = 0')
   await db.run('UPDATE rdcms_plugins SET is_active = 1 WHERE slug = ?', [slug])
   const pluginDir = path.join(pluginsRoot, slug)
   await runInstallScript(pluginDir)
@@ -156,8 +159,7 @@ export async function registerPluginFromDir(pluginDir, { forceActive = false } =
     ]
   )
 
-  const active = await db.get('SELECT slug FROM rdcms_plugins WHERE is_active = 1')
-  if (!active || forceActive) {
+  if (forceActive) {
     await activatePlugin(manifest.slug)
   }
 

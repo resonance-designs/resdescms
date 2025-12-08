@@ -1,5 +1,5 @@
 <script setup>
-import { defineAsyncComponent, h, onMounted, ref } from 'vue'
+import { defineAsyncComponent, h, onMounted, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { usePluginStore } from '../../stores/plugins'
 
@@ -8,6 +8,7 @@ const router = useRouter()
 const pluginStore = usePluginStore()
 const ViewComponent = ref(null)
 const error = ref('')
+const viewModules = import.meta.glob('/server/plugins/**/*.{vue,js,ts,jsx,tsx}')
 
 async function loadPluginView() {
   const slug = route.path.replace('/admin/', '').split('/')[0]
@@ -15,9 +16,7 @@ async function loadPluginView() {
     error.value = 'Plugin not found'
     return
   }
-  if (!pluginStore.plugins.length) {
-    await pluginStore.fetchPlugins()
-  }
+  await pluginStore.fetchPlugins()
   const plugin = pluginStore.plugins.find(p => p.slug === slug)
   if (!plugin || !plugin.isActive) {
     router.replace({ name: 'admin-plugins' })
@@ -29,7 +28,16 @@ async function loadPluginView() {
     return
   }
   try {
-    ViewComponent.value = defineAsyncComponent(() => import(/* @vite-ignore */ viewPath))
+    // Normalize and resolve against known plugin admin modules
+    const normalized = viewPath.replace(/\\/g, '/')
+    const matchKey = Object.keys(viewModules).find(k => k.endsWith(normalized))
+    if (matchKey && viewModules[matchKey]) {
+      ViewComponent.value = defineAsyncComponent(viewModules[matchKey])
+    } else if (viewModules[normalized]) {
+      ViewComponent.value = defineAsyncComponent(viewModules[normalized])
+    } else {
+      ViewComponent.value = defineAsyncComponent(() => import(/* @vite-ignore */ normalized))
+    }
   } catch (err) {
     console.error('Failed to load plugin view', err)
     error.value = 'Failed to load plugin view'
@@ -37,6 +45,15 @@ async function loadPluginView() {
 }
 
 onMounted(loadPluginView)
+
+watch(
+  () => route.fullPath,
+  () => {
+    ViewComponent.value = null
+    error.value = ''
+    loadPluginView()
+  }
+)
 </script>
 
 <template>
