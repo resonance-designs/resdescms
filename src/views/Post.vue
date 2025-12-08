@@ -17,7 +17,7 @@ async function loadPost(slug) {
     post.value = contentStore.posts.find(p => p.slug === slug) || null
   }
   const body = post.value?.content || ''
-  if (/\[post\b/i.test(body) && !contentStore.posts.length) {
+  if (/\[post\b/i.test(body) && !contentStore.postsIndexLoaded) {
     await contentStore.fetchPosts()
   }
   if (/\[page\b/i.test(body) && !contentStore.pages.length) {
