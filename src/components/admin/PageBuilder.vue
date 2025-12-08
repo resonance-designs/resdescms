@@ -34,6 +34,14 @@ const selectedBlock = computed(() => blocks.value.find(b => b.id === selectedId.
 const selectedElement = computed(() => selectedBlock.value?.elements?.find(el => el.id === selectedElementId.value))
 const mediaModal = reactive({ open: false, mode: 'single' })
 const mediaSelection = reactive(new Set())
+const apiBase = import.meta.env.VITE_API_BASE || 'http://localhost:3001'
+
+function resolveMediaUrl(url) {
+  if (!url) return ''
+  if (/^https?:\/\//i.test(url)) return url
+  if (url.startsWith('//')) return window.location.protocol + url
+  return `${apiBase}${url.startsWith('/') ? '' : '/'}${url}`
+}
 
 const cells = computed(() => Array.from({ length: rows.value * cols.value }, (_, i) => ({
   row: Math.floor(i / cols.value) + 1,
@@ -138,6 +146,9 @@ onMounted(async () => {
   if (!contentStore.categories.length) {
     await contentStore.fetchCategories()
   }
+  if (!contentStore.navigationMenus.length) {
+    await contentStore.fetchNavigationMenus()
+  }
 })
 
 function startMove(evt, block) {
@@ -213,7 +224,8 @@ const elementOptions = [
   { value: 'portfolio', label: 'Portfolio' },
   { value: 'custom', label: 'Custom Code (HTML)' },
   { value: 'contact', label: 'Contact Form' },
-  { value: 'posts', label: 'Posts' }
+  { value: 'posts', label: 'Posts' },
+  { value: 'menu', label: 'Menu' }
 ]
 
 const pendingElementType = ref('text')
@@ -227,6 +239,9 @@ function addElementToBlock() {
   }
   if (elem.type === 'posts') {
     elem.data = { categoryId: 'all', perPage: 5, displayMode: 'medium', icon: '' }
+  } else if (elem.type === 'menu') {
+    const defaultMenu = contentStore.navigationMenus.find(m => m.is_default) || contentStore.navigationMenus[0]
+    elem.data = { menuId: defaultMenu?.id || null, orientation: 'horizontal' }
   }
   updateBlock({
     elements: [...(selectedBlock.value.elements || []), elem]
@@ -508,6 +523,34 @@ function confirmMediaSelection() {
               <p class="text-xs text-gray-500">Posts element will render and paginate according to these settings.</p>
             </div>
 
+            <div v-else-if="selectedElement.type === 'menu'" class="space-y-2">
+              <div>
+                <label class="text-xs text-gray-600">Menu</label>
+                <select
+                  class="w-full border rounded px-3 py-2"
+                  :value="selectedElement.data?.menuId || ''"
+                  @change="updateElementData({ menuId: $event.target.value ? Number($event.target.value) : null })"
+                >
+                  <option value="">Select menu</option>
+                  <option v-for="menu in contentStore.navigationMenus" :key="menu.id" :value="menu.id">
+                    {{ menu.name }} <span v-if="menu.is_default">(Default)</span>
+                  </option>
+                </select>
+              </div>
+              <div>
+                <label class="text-xs text-gray-600">Orientation</label>
+                <select
+                  class="w-full border rounded px-3 py-2"
+                  :value="selectedElement.data?.orientation || 'horizontal'"
+                  @change="updateElementData({ orientation: $event.target.value || 'horizontal' })"
+                >
+                  <option value="horizontal">Horizontal</option>
+                  <option value="vertical">Vertical</option>
+                </select>
+              </div>
+              <p class="text-[10px] text-gray-500">Menus use navigation items saved in the Navigation screen.</p>
+            </div>
+
             <div v-else-if="selectedElement.type === 'custom'" class="space-y-2">
               <label class="text-xs text-gray-600">HTML</label>
               <textarea class="w-full border rounded px-3 py-2" rows="4" :value="selectedElement.data?.html || ''" @input="updateElementData({ html: $event.target.value })" />
@@ -545,7 +588,7 @@ function confirmMediaSelection() {
             @click="toggleMediaItem(file.id)"
           >
             <div class="h-32 bg-gray-100 flex items-center justify-center">
-              <img v-if="file.mime_type?.startsWith('image/')" :src="file.url" class="object-cover h-full w-full" />
+              <img v-if="file.mime_type?.startsWith('image/')" :src="resolveMediaUrl(file.url)" class="object-cover h-full w-full" />
               <div v-else class="text-xs text-gray-600 px-2">{{ file.filename || file.url }}</div>
             </div>
             <div class="px-2 py-1 text-xs text-gray-700 truncate">{{ file.filename || file.url }}</div>

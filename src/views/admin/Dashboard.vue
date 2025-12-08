@@ -26,13 +26,13 @@ onMounted(async () => {
   await contentStore.fetchPosts()
   await contentStore.fetchPages()
   await contentStore.fetchMedia()
-  await contentStore.fetchNavigation()
+  await contentStore.fetchNavigationMenus()
 
   stats.value = {
     posts: contentStore.posts.length,
     pages: contentStore.pages.length,
     media: contentStore.media.length,
-    navigation: contentStore.navigation.length
+    navigation: contentStore.navigationMenus.reduce((sum, menu) => sum + (menu.items?.length || 0), 0)
   }
 
   recentPosts.value = contentStore.posts

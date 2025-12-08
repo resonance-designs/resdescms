@@ -27,6 +27,12 @@ npm run dev
 ```
 Starts Vite on `http://localhost:5173`.
 
+If your frontend and backend run on different origins/ports, create a `.env` in the project root with:
+```
+VITE_API_BASE=http://localhost:3001
+```
+Restart `npm run dev` after setting this so media URLs and API calls resolve correctly.
+
 ## Default Admin Credentials
 - Username: `resonancedesigns`
 - Password: `i4Vc$oUU%AR!WK3W`
@@ -46,7 +52,8 @@ Starts Vite on `http://localhost:5173`.
   - `themes/` – Installed themes (e.g., `resdes-basic`)
 
 ## Key Features
-- Posts, pages, categories, navigation, media library
+- Posts, pages, categories, navigation menus, media library
+- Multiple navigation menus with per-item targets; menu block element for layouts (horizontal/vertical)
 - Theme management (upload/activate ZIP themes) with per-section spacing, borders, and color/font settings
 - Grid-based page builder with draggable/resizable blocks and elements (text, media, gallery, posts, etc.)
 - Header/footer/sidebar builders in theme settings

@@ -1,5 +1,5 @@
 # ResDesCMS
-Version: **alpha** | Latest release: v0.1.1
+Version: **alpha** | Latest release: v0.1.2
 
 ## About
 A modern, full-featured CMS built with Vue 3 + Vite, Express.js, and SQLite.
@@ -14,7 +14,8 @@ A modern, full-featured CMS built with Vue 3 + Vite, Express.js, and SQLite.
    - Password: `i4Vc$oUU%AR!WK3W`
 
 ## Features
-- Posts, pages, categories, navigation, media library
+- Posts, pages, categories, navigation menus, media library
+- Multiple navigation menus with per-item targets; menu block element for layouts (horizontal/vertical)
 - Theme system with header/body/footer/sidebar builders and per-section spacing/borders
 - Admin panel with JWT auth and Pinia state
 - Tailwind CSS styling with custom theme tokens
@@ -34,8 +35,12 @@ A modern, full-featured CMS built with Vue 3 + Vite, Express.js, and SQLite.
 - Sample bundled theme: `server/themes/resdes-basic` showing CSS variables, settings schema, and header/footer layouts.
 - See [THEMEDEV.md](THEMEDEV.md) for theme authoring details.
 
+## Media & API base
+- Media uploads are served from the API (`/uploads/<file>`). If your frontend and backend run on different origins, set `VITE_API_BASE` to the API origin (e.g., `http://localhost:3001`) in your `.env` and restart `npm run dev` so media URLs resolve correctly.
+
 ## Changelog
 ### Latest Updates
+- v0.1.2 (alpha): Navigation menus (multiple, per-item targets), menu block element with orientation, media URL fixes for split frontend/backend hosts.
 - v0.1.1 (alpha): Theme builders (header/footer/sidebar/body), container spacing/borders, media selection for logo/favicon, typography dropdown + custom fonts, Posts element, default posts/pages seeding, home page slug moved to CMS settings, padding/CSS var fixes.
 
 See [CHANGELOG.md](CHANGELOG.md) for full update logs.

@@ -1,5 +1,11 @@
 # Changelog
 
+## v0.1.2 (alpha)
+- Added multiple navigation menus with per-item targets; updated admin Navigation UI and menu element rendering (horizontal/vertical).
+- Added menu block to page builder; frontend resolves media URLs via API base.
+- Fixed SPA navigation to reload content on slug changes for pages/posts.
+- Improved media URL handling for split frontend/backend origins.
+
 ## v0.1.1 (alpha)
 - Added theme management with header/body/footer/sidebar builders and per-section spacing/border settings.
 - Added container spacing/border controls in Theme Management; updated frontend rendering to apply them.

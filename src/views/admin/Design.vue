@@ -6,6 +6,7 @@ import { useContentStore } from '../../stores/content'
 import PageBuilder from '../../components/admin/PageBuilder.vue'
 
 const themeStore = useThemeStore()
+const apiBase = import.meta.env.VITE_API_BASE || 'http://localhost:3001'
 
 const design = ref({
   primaryColor: '#FF6B35',
@@ -29,6 +30,13 @@ const mediaModal = ref({ open: false, target: null, mode: 'single' })
 const mediaSelection = ref(null)
 const contentStore = useContentStore()
 const fontSelection = ref(null)
+
+function resolveMediaUrl(url) {
+  if (!url) return ''
+  if (/^https?:\/\//i.test(url)) return url
+  if (url.startsWith('//')) return window.location.protocol + url
+  return `${apiBase}${url.startsWith('/') ? '' : '/'}${url}`
+}
 
 const activeTheme = computed(() => themeStore.activeTheme)
 const themeSubTab = ref('management')
@@ -862,7 +870,7 @@ function updateThemeSetting(key, value) {
             @click="selectMedia(file.id)"
           >
             <div class="h-32 bg-gray-100 flex items-center justify-center">
-              <img v-if="file.mime_type?.startsWith('image/')" :src="file.url" class="object-cover h-full w-full" />
+              <img v-if="file.mime_type?.startsWith('image/')" :src="resolveMediaUrl(file.url)" class="object-cover h-full w-full" />
               <div v-else class="text-xs text-gray-600 px-2">{{ file.filename || file.url }}</div>
             </div>
             <div class="px-2 py-1 text-xs text-gray-700 truncate">{{ file.filename || file.url }}</div>
