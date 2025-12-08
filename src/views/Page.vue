@@ -4,17 +4,29 @@ import { useRoute } from 'vue-router'
 import { useContentStore } from '../stores/content'
 import { useThemeStore } from '../stores/theme'
 import { resolveMediaUrl } from '../utils/media'
+import { replaceShortcodes } from '../utils/shortcodes'
 import ElementRenderer from '../components/ElementRenderer.vue'
 
 const route = useRoute()
 const contentStore = useContentStore()
 const themeStore = useThemeStore()
 const page = ref(null)
+
 async function loadPage(slug) {
   page.value = await contentStore.fetchPageBySlug(slug)
   if (!page.value) {
     await contentStore.fetchPages()
     page.value = contentStore.pages.find(p => p.slug === slug)
+  }
+  const body = page.value?.content || ''
+  if (/\[post\b/i.test(body) && !contentStore.posts.length) {
+    await contentStore.fetchPosts()
+  }
+  if (/\[page\b/i.test(body) && !contentStore.pages.length) {
+    await contentStore.fetchPages()
+  }
+  if (/\[media\b/i.test(body) && !contentStore.media.length) {
+    await contentStore.fetchMedia()
   }
   if (!contentStore.navigationMenus.length) {
     await contentStore.fetchNavigationMenus()
@@ -42,6 +54,14 @@ const layoutData = computed(() => {
 })
 
 const hasLayoutBlocks = computed(() => layoutData.value?.blocks?.length)
+
+const renderedContent = computed(() =>
+  replaceShortcodes(page.value?.content || '', {
+    posts: contentStore.posts,
+    pages: contentStore.pages,
+    media: contentStore.media
+  })
+)
 
 const headerLayout = computed(() => themeStore.activeTheme?.settings?.headerLayout)
 const footerLayout = computed(() => themeStore.activeTheme?.settings?.footerLayout)
@@ -151,9 +171,11 @@ function spacingBox(prefix, fallback) {
             </div>
           </template>
 
-          <div v-else class="prose prose-lg max-w-none text-gray-800 leading-relaxed whitespace-pre-wrap">
-            {{ page.content }}
-          </div>
+          <div
+            v-else
+            class="prose prose-lg max-w-none text-gray-800 leading-relaxed whitespace-pre-wrap"
+            v-html="renderedContent"
+          ></div>
         </article>
 
         <div v-if="showFooter && hasBlocks(footerLayout)" class="bg-white rounded-lg shadow-md" :style="{ padding: footerPadding, margin: footerMargin }">

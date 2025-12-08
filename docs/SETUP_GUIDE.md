@@ -88,6 +88,7 @@ Restart `npm run dev` after setting this so media URLs and API calls resolve cor
 -   CRUD for posts: `/api/posts`
 -   Get post by slug: `/api/posts/slug/:slug`
 -   CRUD for pages: `/api/pages`
+-   Shortcodes available in page/post content: `[post slug="<slug>" display="full|medium|small|link" target="same|new"]`, `[page slug="<slug>" display="link" target="same|new"]`, `[media id="<id>" width="<css>"]`
 -   Media: `/api/media`, `/api/media/upload`
 -   Navigation: `/api/navigation`
 -   Themes: `/api/themes`, `/api/themes/active`, `/api/themes/upload`
