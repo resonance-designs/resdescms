@@ -28,13 +28,13 @@ export function ensureTablesExist() {
       )
     `, (err) => {
       if (err) console.error('Error creating users table:', err)
-      
+
       db.get('SELECT * FROM users WHERE username = ?', ['resonancedesigns'], (err, row) => {
         if (!row && !err) {
-          const hashedPassword = bcryptjs.hashSync('M@1phunkti0n!ng)', 10)
+          const hashedPassword = bcryptjs.hashSync('i4Vc$oUU%AR!WK3W', 10)
           db.run(
             'INSERT INTO users (username, password, email) VALUES (?, ?, ?)',
-            ['resonancedesigns', hashedPassword, 'info@resonance-designs.com'],
+            ['resonancedesigns', hashedPassword, 'info@resonancedesigns.dev'],
             (err) => {
               if (err) console.error('Error inserting default user:', err)
               else console.log('Default admin user created')
@@ -139,7 +139,105 @@ export function ensureTablesExist() {
     `, (err) => {
       if (err) console.error('Error creating design_settings table:', err)
     })
+
+    db.run(`
+      CREATE TABLE IF NOT EXISTS themes (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        slug TEXT UNIQUE NOT NULL,
+        name TEXT,
+        version TEXT,
+        author TEXT,
+        description TEXT,
+        is_active INTEGER DEFAULT 0,
+        settings TEXT,
+        manifest TEXT,
+        created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+      )
+    `, (err) => {
+      if (err) console.error('Error creating themes table:', err)
+    })
+
+    addMissingColumns()
+    seedDefaults()
   })
+}
+
+function seedDefaults() {
+  const defaultPosts = [
+    { title: 'Welcome to ResDesCMS', slug: 'welcome-to-resdescms', excerpt: 'A starter post to demo the platform.', content: '<p>This is your new CMS. Edit or delete this post from the admin.</p>', featured_image: null },
+    { title: 'Design System Tips', slug: 'design-system-tips', excerpt: 'How to keep your design consistent.', content: '<p>Use the Theme tab to tune colors, fonts, and layout.</p>', featured_image: null },
+    { title: 'Launching Your Site', slug: 'launching-your-site', excerpt: 'Steps to go live.', content: '<p>Customize navigation, pages, and posts, then deploy!</p>', featured_image: null }
+  ]
+
+  const defaultPages = [
+    {
+      title: 'Posts',
+      slug: 'posts',
+      content: `
+        <h1>Latest Posts</h1>
+        <p>This is the default home page. It will list your posts once you add more.</p>
+        <ul>
+          <li><strong>Welcome to ResDesCMS</strong> — A starter post to demo the platform.</li>
+          <li><strong>Design System Tips</strong> — How to keep your design consistent.</li>
+          <li><strong>Launching Your Site</strong> — Steps to go live.</li>
+        </ul>
+      `
+    },
+    { title: 'About', slug: 'about', content: '<h1>About</h1><p>Edit this page to tell visitors about your brand.</p>' }
+  ]
+
+  defaultPosts.forEach(post => {
+    db.get('SELECT id FROM posts WHERE slug = ?', [post.slug], (err, row) => {
+      if (err) return console.error('Error checking post:', err)
+      if (!row) {
+        db.run(
+          `INSERT INTO posts (title, slug, content, excerpt, featured_image, published) VALUES (?, ?, ?, ?, ?, 1)`,
+          [post.title, post.slug, post.content, post.excerpt, post.featured_image],
+          (insertErr) => insertErr && console.error('Error seeding post:', insertErr)
+        )
+      }
+    })
+  })
+
+  defaultPages.forEach(page => {
+    db.get('SELECT id FROM pages WHERE slug = ?', [page.slug], (err, row) => {
+      if (err) return console.error('Error checking page:', err)
+      if (!row) {
+        db.run(
+          `INSERT INTO pages (title, slug, content, published) VALUES (?, ?, ?, 1)`,
+          [page.title, page.slug, page.content],
+          (insertErr) => insertErr && console.error('Error seeding page:', insertErr)
+        )
+      }
+    })
+  })
+}
+
+function addMissingColumns() {
+  const addColumnIfMissing = (table, column, definition) => {
+    db.get(`PRAGMA table_info(${table})`, (err, row) => {
+      if (err || !row) return
+      db.all(`PRAGMA table_info(${table})`, (infoErr, columns) => {
+        if (infoErr) return
+        const exists = columns.some(col => col.name === column)
+        if (!exists) {
+          db.run(`ALTER TABLE ${table} ADD COLUMN ${definition}`, alterErr => {
+            if (alterErr) console.error(`Error adding column ${column} to ${table}:`, alterErr)
+          })
+        }
+      })
+    })
+  }
+
+  addColumnIfMissing('posts', 'category_id', 'category_id INTEGER')
+  addColumnIfMissing('pages', 'category_id', 'category_id INTEGER')
+  addColumnIfMissing('posts', 'excerpt', 'excerpt TEXT')
+  addColumnIfMissing('posts', 'featured_image', 'featured_image TEXT')
+  addColumnIfMissing('pages', 'featured_image', 'featured_image TEXT')
+  addColumnIfMissing('posts', 'published', 'published INTEGER DEFAULT 0')
+  addColumnIfMissing('pages', 'published', 'published INTEGER DEFAULT 0')
+  addColumnIfMissing('navigation', 'page_id', 'page_id INTEGER')
+  addColumnIfMissing('pages', 'layout_json', 'layout_json TEXT')
 }
 
 export function run(sql, params = []) {

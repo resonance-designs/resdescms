@@ -17,6 +17,20 @@ router.get('/', async (req, res) => {
   }
 })
 
+router.get('/slug/:slug', async (req, res) => {
+  try {
+    const page = await db.get(`
+      SELECT p.*, c.name as category_name FROM pages p
+      LEFT JOIN categories c ON p.category_id = c.id
+      WHERE p.slug = ?
+    `, [req.params.slug])
+    if (!page) return res.status(404).json({ error: 'Page not found' })
+    res.json(page)
+  } catch (error) {
+    res.status(500).json({ error: error.message })
+  }
+})
+
 router.get('/:id', async (req, res) => {
   try {
     const page = await db.get(`
@@ -33,15 +47,15 @@ router.get('/:id', async (req, res) => {
 
 router.post('/', authenticateToken, async (req, res) => {
   try {
-    const { title, slug, content, featured_image, category_id, published } = req.body
+    const { title, slug, content, featured_image, category_id, published, layout_json } = req.body
 
     if (!title || !slug) {
       return res.status(400).json({ error: 'Title and slug are required' })
     }
 
     const result = await db.run(
-      'INSERT INTO pages (title, slug, content, featured_image, category_id, published) VALUES (?, ?, ?, ?, ?, ?)',
-      [title, slug, content, featured_image, category_id || null, published ? 1 : 0]
+      'INSERT INTO pages (title, slug, content, featured_image, category_id, published, layout_json) VALUES (?, ?, ?, ?, ?, ?, ?)',
+      [title, slug, content, featured_image, category_id || null, published ? 1 : 0, layout_json || null]
     )
 
     const page = await db.get(`
@@ -57,11 +71,11 @@ router.post('/', authenticateToken, async (req, res) => {
 
 router.put('/:id', authenticateToken, async (req, res) => {
   try {
-    const { title, slug, content, featured_image, category_id, published } = req.body
+    const { title, slug, content, featured_image, category_id, published, layout_json } = req.body
 
     await db.run(
-      'UPDATE pages SET title = ?, slug = ?, content = ?, featured_image = ?, category_id = ?, published = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?',
-      [title, slug, content, featured_image, category_id || null, published ? 1 : 0, req.params.id]
+      'UPDATE pages SET title = ?, slug = ?, content = ?, featured_image = ?, category_id = ?, published = ?, layout_json = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?',
+      [title, slug, content, featured_image, category_id || null, published ? 1 : 0, layout_json || null, req.params.id]
     )
 
     const page = await db.get(`

@@ -1,3 +1,38 @@
+<script setup>
+import { ref } from 'vue'
+import { useRouter } from 'vue-router'
+import { useAuthStore } from '../../stores/auth'
+
+const router = useRouter()
+const authStore = useAuthStore()
+
+const form = ref({
+  username: '',
+  password: ''
+})
+
+const error = ref('')
+const loading = ref(false)
+
+async function handleLogin() {
+  error.value = ''
+  loading.value = true
+
+  try {
+    const success = await authStore.login(form.value.username, form.value.password)
+    if (success) {
+      router.push({ name: 'admin' })
+    } else {
+      error.value = 'Invalid credentials'
+    }
+  } catch (err) {
+    error.value = 'Login failed. Please try again.'
+  } finally {
+    loading.value = false
+  }
+}
+</script>
+
 <template>
   <div class="min-h-screen bg-gradient-to-br from-rd-dark to-gray-800 flex items-center justify-center">
     <div class="w-full max-w-md">
@@ -42,41 +77,6 @@
     </div>
   </div>
 </template>
-
-<script setup>
-import { ref } from 'vue'
-import { useRouter } from 'vue-router'
-import { useAuthStore } from '../../stores/auth'
-
-const router = useRouter()
-const authStore = useAuthStore()
-
-const form = ref({
-  username: '',
-  password: ''
-})
-
-const error = ref('')
-const loading = ref(false)
-
-async function handleLogin() {
-  error.value = ''
-  loading.value = true
-
-  try {
-    const success = await authStore.login(form.value.username, form.value.password)
-    if (success) {
-      router.push({ name: 'admin' })
-    } else {
-      error.value = 'Invalid credentials'
-    }
-  } catch (err) {
-    error.value = 'Login failed. Please try again.'
-  } finally {
-    loading.value = false
-  }
-}
-</script>
 
 <style scoped>
 </style>

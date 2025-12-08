@@ -65,6 +65,12 @@ const routes = [
         meta: { requiresAuth: true }
       },
       {
+        path: 'categories',
+        name: 'admin-categories',
+        component: () => import('../views/admin/Categories.vue'),
+        meta: { requiresAuth: true }
+      },
+      {
         path: 'media',
         name: 'admin-media',
         component: () => import('../views/admin/Media.vue'),
@@ -105,7 +111,7 @@ const router = createRouter({
 
 router.beforeEach((to, from, next) => {
   const authStore = useAuthStore()
-  
+
   if (to.meta.requiresAuth && !authStore.isAuthenticated) {
     next({ name: 'admin-login' })
   } else if (to.name === 'admin-login' && authStore.isAuthenticated) {

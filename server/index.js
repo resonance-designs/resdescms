@@ -13,6 +13,8 @@ import postsRoutes from './routes/posts.js'
 import pagesRoutes from './routes/pages.js'
 import mediaRoutes from './routes/media.js'
 import navigationRoutes from './routes/navigation.js'
+import themeRoutes from './routes/themes.js'
+import { themesRoot, bootstrapThemesFromDisk } from './services/themeService.js'
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 const app = express()
@@ -28,6 +30,7 @@ app.use(cors({
 app.use(express.json())
 app.use(express.urlencoded({ extended: true }))
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')))
+app.use('/themes', express.static(themesRoot))
 
 app.use('/api/auth', authRoutes)
 app.use('/api/users', usersRoutes)
@@ -37,8 +40,10 @@ app.use('/api/posts', postsRoutes)
 app.use('/api/pages', pagesRoutes)
 app.use('/api/media', mediaRoutes)
 app.use('/api/navigation', navigationRoutes)
+app.use('/api/themes', themeRoutes)
 
 app.listen(PORT, () => {
-  console.log(`CMS Server running on http://localhost:${PORT}`)
+  console.log(`ResDesCMS Server running on http://localhost:${PORT}`)
   db.ensureTablesExist()
+  bootstrapThemesFromDisk().catch(err => console.error('Theme bootstrap failed:', err))
 })

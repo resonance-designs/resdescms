@@ -1,0 +1,59 @@
+:root {
+  --theme-primaryColor: #e06e26;
+  --theme-accentColor: #319ea4;
+  --theme-textColor: #1f2933;
+  --theme-backgroundColor: #f9fafb;
+  --theme-maxWidth: 1200px;
+  --theme-headerPadding: 16px;
+  --theme-headerMargin: 0px;
+  --theme-bodyPadding: 32px;
+  --theme-bodyMargin: 0px;
+  --theme-footerPadding: 16px;
+  --theme-footerMargin: 0px;
+  --theme-sidebarPadding: 16px;
+  --theme-sidebarMargin: 0px;
+}
+
+body {
+  background: var(--theme-backgroundColor);
+  color: var(--theme-textColor);
+  font-family: "AvantGarde-Bk", system-ui, sans-serif;
+}
+
+a {
+  color: var(--theme-primaryColor);
+}
+
+.theme-surface {
+  background: white;
+  border-radius: var(--theme-cornerRadius);
+  box-shadow: 0 10px 35px rgba(0, 0, 0, 0.08);
+  border: 1px solid rgba(0, 0, 0, 0.04);
+}
+
+.theme-heading {
+  text-transform: var(--theme-headingCase);
+  letter-spacing: 0.08em;
+}
+
+.theme-max-w {
+  max-width: var(--theme-maxWidth);
+  margin-inline: auto;
+}
+
+.theme-button {
+  background: linear-gradient(135deg, var(--theme-primaryColor), var(--theme-accentColor));
+  color: #fff;
+  border-radius: calc(var(--theme-cornerRadius) + 4px);
+  padding: 0.75rem 1.5rem;
+  font-weight: 700;
+  transition: transform 160ms ease, box-shadow 160ms ease;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.theme-button:hover {
+  transform: translateY(-1px) scale(1.01);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+}

@@ -1,16 +1,19 @@
 {
   "name": "resdescms",
-  "version": "1.0.0",
+  "version": "0.1.1",
   "type": "module",
   "scripts": {
     "dev": "vite",
+    "server": "nodemon server/index.js",
+    "server:once": "node server/index.js",
+    "start": "concurrently \"npm run dev\" \"npm run server\"",
     "build": "vite build",
     "preview": "vite preview",
-    "server": "node server/index.js",
     "lint": "eslint . --ext .vue,.js,.jsx,.cjs,.mjs --fix --ignore-path .gitignore"
   },
   "dependencies": {
     "@tailwindcss/postcss": "^4.1.17",
+    "adm-zip": "latest",
     "axios": "latest",
     "bcryptjs": "latest",
     "cors": "latest",
@@ -19,15 +22,17 @@
     "jsonwebtoken": "latest",
     "multer": "latest",
     "pinia": "latest",
-    "sqlite3": "latest",
+    "sqlite3": "^5.1.7",
     "vue": "latest",
     "vue-router": "latest"
   },
   "devDependencies": {
     "@vitejs/plugin-vue": "latest",
     "autoprefixer": "latest",
+    "concurrently": "latest",
     "eslint": "latest",
     "eslint-plugin-vue": "latest",
+    "nodemon": "latest",
     "postcss": "latest",
     "tailwindcss": "latest",
     "vite": "latest"

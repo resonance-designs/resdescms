@@ -87,6 +87,16 @@ export const useContentStore = defineStore('content', () => {
     }
   }
 
+  async function fetchPageBySlug(slug) {
+    try {
+      const response = await axios.get(`http://localhost:3001/api/pages/slug/${slug}`)
+      return response.data
+    } catch (error) {
+      console.error('Failed to fetch page by slug:', error)
+      return null
+    }
+  }
+
   async function createPage(page) {
     try {
       const response = await axios.post('http://localhost:3001/api/pages', page)
@@ -229,6 +239,7 @@ export const useContentStore = defineStore('content', () => {
     deletePost,
     fetchPages,
     fetchPage,
+    fetchPageBySlug,
     createPage,
     updatePage,
     deletePage,

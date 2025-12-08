@@ -1,10 +1,85 @@
+<script setup>
+import { ref, onMounted, computed } from 'vue'
+import { useRouter, useRoute, RouterLink, RouterView } from 'vue-router'
+import { useAuthStore } from '../../stores/auth'
+import { useContentStore } from '../../stores/content'
+import DashboardCard from '../../components/admin/DashboardCard.vue'
+
+const router = useRouter()
+const route = useRoute()
+const authStore = useAuthStore()
+const contentStore = useContentStore()
+
+const stats = ref({
+  posts: 0,
+  pages: 0,
+  media: 0,
+  navigation: 0
+})
+
+const recentPosts = ref([])
+const recentPages = ref([])
+
+const isRootAdmin = computed(() => route.path === '/admin')
+
+onMounted(async () => {
+  await contentStore.fetchPosts()
+  await contentStore.fetchPages()
+  await contentStore.fetchMedia()
+  await contentStore.fetchNavigation()
+
+  stats.value = {
+    posts: contentStore.posts.length,
+    pages: contentStore.pages.length,
+    media: contentStore.media.length,
+    navigation: contentStore.navigation.length
+  }
+
+  recentPosts.value = contentStore.posts
+  recentPages.value = contentStore.pages
+})
+
+function isActive(path) {
+  return route.path.startsWith(path) && (path === '/admin' ? route.path === '/admin' : true)
+}
+
+function handleLogout() {
+  authStore.logout()
+  router.push({ name: 'admin-login' })
+}
+
+function formatDate(date) {
+  return new Date(date).toLocaleDateString()
+}
+
+function getPageTitle() {
+  const path = route.path
+  const titles = {
+    '/admin/posts': 'Posts',
+    '/admin/pages': 'Pages',
+    '/admin/media': 'Media',
+    '/admin/navigation': 'Navigation',
+    '/admin/settings': 'Settings',
+    '/admin/users': 'Users',
+    '/admin/design': 'Design Settings'
+  }
+  
+  for (const [routePath, title] of Object.entries(titles)) {
+    if (path.startsWith(routePath)) {
+      return title
+    }
+  }
+  return 'Admin'
+}
+</script>
+
 <template>
   <div class="flex h-screen bg-gray-100">
     <!-- Sidebar -->
     <div class="w-64 bg-gray-900 text-white p-6">
       <div class="mb-8">
-        <h1 class="text-2xl font-avant-garde-demi">Resonance</h1>
-        <p class="text-sm text-gray-400">CMS Admin</p>
+        <h1 class="text-2xl font-avant-garde-demi">ResDesCMS</h1>
+        <p class="text-sm text-gray-400">Admin</p>
       </div>
 
       <nav class="space-y-2">
@@ -136,81 +211,6 @@
     </div>
   </div>
 </template>
-
-<script setup>
-import { ref, onMounted, computed } from 'vue'
-import { useRouter, useRoute, RouterLink, RouterView } from 'vue-router'
-import { useAuthStore } from '../../stores/auth'
-import { useContentStore } from '../../stores/content'
-import DashboardCard from '../../components/admin/DashboardCard.vue'
-
-const router = useRouter()
-const route = useRoute()
-const authStore = useAuthStore()
-const contentStore = useContentStore()
-
-const stats = ref({
-  posts: 0,
-  pages: 0,
-  media: 0,
-  navigation: 0
-})
-
-const recentPosts = ref([])
-const recentPages = ref([])
-
-const isRootAdmin = computed(() => route.path === '/admin')
-
-onMounted(async () => {
-  await contentStore.fetchPosts()
-  await contentStore.fetchPages()
-  await contentStore.fetchMedia()
-  await contentStore.fetchNavigation()
-
-  stats.value = {
-    posts: contentStore.posts.length,
-    pages: contentStore.pages.length,
-    media: contentStore.media.length,
-    navigation: contentStore.navigation.length
-  }
-
-  recentPosts.value = contentStore.posts
-  recentPages.value = contentStore.pages
-})
-
-function isActive(path) {
-  return route.path.startsWith(path) && (path === '/admin' ? route.path === '/admin' : true)
-}
-
-function handleLogout() {
-  authStore.logout()
-  router.push({ name: 'admin-login' })
-}
-
-function formatDate(date) {
-  return new Date(date).toLocaleDateString()
-}
-
-function getPageTitle() {
-  const path = route.path
-  const titles = {
-    '/admin/posts': 'Posts',
-    '/admin/pages': 'Pages',
-    '/admin/media': 'Media',
-    '/admin/navigation': 'Navigation',
-    '/admin/settings': 'Settings',
-    '/admin/users': 'Users',
-    '/admin/design': 'Design Settings'
-  }
-  
-  for (const [routePath, title] of Object.entries(titles)) {
-    if (path.startsWith(routePath)) {
-      return title
-    }
-  }
-  return 'Admin'
-}
-</script>
 
 <style scoped>
 </style>

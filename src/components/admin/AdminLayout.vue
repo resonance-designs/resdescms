@@ -1,3 +1,14 @@
+<script setup>
+import Sidebar from './Sidebar.vue'
+
+defineProps({
+  title: {
+    type: String,
+    required: true
+  }
+})
+</script>
+
 <template>
   <div class="flex h-screen bg-gray-100">
     <!-- Sidebar -->
@@ -15,14 +26,3 @@
     </div>
   </div>
 </template>
-
-<script setup>
-import Sidebar from './Sidebar.vue'
-
-defineProps({
-  title: {
-    type: String,
-    required: true
-  }
-})
-</script>

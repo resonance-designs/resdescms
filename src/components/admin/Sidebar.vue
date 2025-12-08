@@ -1,8 +1,26 @@
+<script setup>
+import { useRouter, useRoute, RouterLink } from 'vue-router'
+import { useAuthStore } from '../../stores/auth'
+
+const router = useRouter()
+const route = useRoute()
+const authStore = useAuthStore()
+
+function isActive(path) {
+  return route.path.startsWith(path)
+}
+
+function handleLogout() {
+  authStore.logout()
+  router.push({ name: 'admin-login' })
+}
+</script>
+
 <template>
   <div class="w-64 bg-gray-900 text-white p-6">
     <div class="mb-8">
-      <h1 class="text-2xl font-avant-garde-demi">Resonance</h1>
-      <p class="text-sm text-gray-400">CMS Admin</p>
+      <h1 class="text-2xl font-avant-garde-demi">ResDesCMS</h1>
+      <p class="text-sm text-gray-400">Admin</p>
     </div>
 
     <nav class="space-y-2">
@@ -14,6 +32,9 @@
       </RouterLink>
       <RouterLink to="/admin/pages" class="block px-4 py-2 rounded hover:bg-gray-800 transition" :class="{ 'bg-rd-orange': isActive('/admin/pages') }">
         Pages
+      </RouterLink>
+      <RouterLink to="/admin/categories" class="block px-4 py-2 rounded hover:bg-gray-800 transition" :class="{ 'bg-rd-orange': isActive('/admin/categories') }">
+        Categories
       </RouterLink>
       <RouterLink to="/admin/media" class="block px-4 py-2 rounded hover:bg-gray-800 transition" :class="{ 'bg-rd-orange': isActive('/admin/media') }">
         Media
@@ -42,21 +63,3 @@
     </div>
   </div>
 </template>
-
-<script setup>
-import { useRouter, useRoute, RouterLink } from 'vue-router'
-import { useAuthStore } from '../../stores/auth'
-
-const router = useRouter()
-const route = useRoute()
-const authStore = useAuthStore()
-
-function isActive(path) {
-  return route.path.startsWith(path)
-}
-
-function handleLogout() {
-  authStore.logout()
-  router.push({ name: 'admin-login' })
-}
-</script>

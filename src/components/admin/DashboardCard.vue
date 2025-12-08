@@ -1,15 +1,3 @@
-<template>
-  <div class="bg-white rounded-lg shadow-md p-6 border-l-4" :class="borderColor">
-    <div class="flex items-center justify-between">
-      <div>
-        <p class="text-gray-600 text-sm">{{ title }}</p>
-        <p class="text-3xl font-bold text-gray-900 mt-2">{{ count }}</p>
-      </div>
-      <div class="text-4xl">{{ icon }}</div>
-    </div>
-  </div>
-</template>
-
 <script setup>
 import { computed } from 'vue'
 
@@ -28,3 +16,15 @@ const borderColor = computed(() => {
   }
 })
 </script>
+
+<template>
+  <div class="bg-white rounded-lg shadow-md p-6 border-l-4" :class="borderColor">
+    <div class="flex items-center justify-between">
+      <div>
+        <p class="text-gray-600 text-sm">{{ title }}</p>
+        <p class="text-3xl font-bold text-gray-900 mt-2">{{ count }}</p>
+      </div>
+      <div class="text-4xl">{{ icon }}</div>
+    </div>
+  </div>
+</template>

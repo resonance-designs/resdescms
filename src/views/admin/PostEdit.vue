@@ -1,3 +1,53 @@
+<script setup>
+import { ref, computed, onMounted } from 'vue'
+import { useRouter, useRoute, RouterLink } from 'vue-router'
+import { useContentStore } from '../../stores/content'
+
+const router = useRouter()
+const route = useRoute()
+const contentStore = useContentStore()
+
+const isEdit = ref(false)
+const form = ref({
+  title: '',
+  slug: '',
+  excerpt: '',
+  content: '',
+  featured_image: '',
+  category_id: null,
+  published: false
+})
+
+const postCategories = computed(() => {
+  return contentStore.categories.filter(c => c.type === 'post')
+})
+
+onMounted(async () => {
+  await contentStore.fetchCategories('post')
+  if (route.params.id) {
+    isEdit.value = true
+    const post = await contentStore.fetchPost(route.params.id)
+    if (post) {
+      form.value = { ...post }
+      form.value.category_id = post.category_id || null
+    }
+  }
+})
+
+async function savePost() {
+  try {
+    if (isEdit.value) {
+      await contentStore.updatePost(route.params.id, form.value)
+    } else {
+      await contentStore.createPost(form.value)
+    }
+    router.push({ name: 'admin-posts' })
+  } catch (error) {
+    alert('Error saving post: ' + error.message)
+  }
+}
+</script>
+
 <template>
   <form @submit.prevent="savePost" class="max-w-4xl">
     <div class="bg-white rounded-lg shadow-md p-6 mb-6">
@@ -53,53 +103,3 @@
     </div>
   </form>
 </template>
-
-<script setup>
-import { ref, computed, onMounted } from 'vue'
-import { useRouter, useRoute, RouterLink } from 'vue-router'
-import { useContentStore } from '../../stores/content'
-
-const router = useRouter()
-const route = useRoute()
-const contentStore = useContentStore()
-
-const isEdit = ref(false)
-const form = ref({
-  title: '',
-  slug: '',
-  excerpt: '',
-  content: '',
-  featured_image: '',
-  category_id: null,
-  published: false
-})
-
-const postCategories = computed(() => {
-  return contentStore.categories.filter(c => c.type === 'post')
-})
-
-onMounted(async () => {
-  await contentStore.fetchCategories('post')
-  if (route.params.id) {
-    isEdit.value = true
-    const post = await contentStore.fetchPost(route.params.id)
-    if (post) {
-      form.value = { ...post }
-      form.value.category_id = post.category_id || null
-    }
-  }
-})
-
-async function savePost() {
-  try {
-    if (isEdit.value) {
-      await contentStore.updatePost(route.params.id, form.value)
-    } else {
-      await contentStore.createPost(form.value)
-    }
-    router.push({ name: 'admin-posts' })
-  } catch (error) {
-    alert('Error saving post: ' + error.message)
-  }
-}
-</script>

@@ -1,7 +1,35 @@
+<script setup>
+import { ref, onMounted } from 'vue'
+import { RouterLink } from 'vue-router'
+import { useContentStore } from '../../stores/content'
+
+const contentStore = useContentStore()
+const posts = ref([])
+const loading = ref(false)
+
+onMounted(async () => {
+  loading.value = true
+  await contentStore.fetchPosts()
+  posts.value = contentStore.posts
+  loading.value = false
+})
+
+function formatDate(date) {
+  return new Date(date).toLocaleDateString()
+}
+
+async function deletePost(id) {
+  if (confirm('Are you sure?')) {
+    await contentStore.deletePost(id)
+    posts.value = posts.value.filter(p => p.id !== id)
+  }
+}
+</script>
+
 <template>
   <div>
     <div class="mb-6 flex justify-end">
-      <RouterLink to="/admin/posts/new" class="bg-rd-orange text-white px-4 py-2 rounded hover:bg-rd-orange-light transition">
+      <RouterLink to="/admin/posts/new" class="bg-cyan-400 text-white px-4 py-2 rounded hover:bg-cyan-300 transition">
         + New Post
       </RouterLink>
     </div>
@@ -39,31 +67,3 @@
     </div>
   </div>
 </template>
-
-<script setup>
-import { ref, onMounted } from 'vue'
-import { RouterLink } from 'vue-router'
-import { useContentStore } from '../../stores/content'
-
-const contentStore = useContentStore()
-const posts = ref([])
-const loading = ref(false)
-
-onMounted(async () => {
-  loading.value = true
-  await contentStore.fetchPosts()
-  posts.value = contentStore.posts
-  loading.value = false
-})
-
-function formatDate(date) {
-  return new Date(date).toLocaleDateString()
-}
-
-async function deletePost(id) {
-  if (confirm('Are you sure?')) {
-    await contentStore.deletePost(id)
-    posts.value = posts.value.filter(p => p.id !== id)
-  }
-}
-</script>

@@ -1,5 +1,18 @@
 @import "tailwindcss";
 
+@theme {
+  --font-avant-garde: "AvantGarde-Md", sans-serif;
+  --font-avant-garde-demi: "AvantGarde-Demi", sans-serif;
+  --font-avant-garde-bk: "AvantGarde-Bk", sans-serif;
+
+  --color-rd-orange: #e06e26;
+  --color-rd-orange-light: #ff893f;
+  --color-rd-teal: #319ea4;
+  --color-rd-teal-light: #7cd0d5;
+  --color-rd-dark: #282828;
+  --color-rd-dark-light: #2a2a2a;
+}
+
 @font-face {
   font-family: "AvantGarde-Bk";
   src: url(/fonts/ITCAvantGardeStd-Bk.eot?#iefix) format("embedded-opentype"),

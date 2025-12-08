@@ -1,3 +1,53 @@
+<script setup>
+import { ref, computed, onMounted } from 'vue'
+import { useContentStore } from '../../stores/content'
+
+const contentStore = useContentStore()
+const loading = ref(false)
+const selectedType = ref('post')
+
+const formData = ref({
+  name: '',
+  slug: '',
+  description: '',
+  type: 'post'
+})
+
+onMounted(async () => {
+  loading.value = true
+  await contentStore.fetchCategories()
+  loading.value = false
+})
+
+const filteredCategories = computed(() => {
+  if (selectedType.value === '') {
+    return contentStore.categories
+  }
+  return contentStore.categories.filter(c => c.type === selectedType.value)
+})
+
+async function addCategory() {
+  try {
+    await contentStore.createCategory(formData.value)
+    formData.value = { name: '', slug: '', description: '', type: 'post' }
+    alert('Category added successfully!')
+  } catch (error) {
+    alert('Error adding category: ' + error.message)
+  }
+}
+
+async function deleteCategory(id) {
+  if (confirm('Are you sure?')) {
+    try {
+      await contentStore.deleteCategory(id)
+      alert('Category deleted successfully!')
+    } catch (error) {
+      alert('Error deleting category: ' + error.message)
+    }
+  }
+}
+</script>
+
 <template>
   <div>
     <div class="mb-6 flex justify-between items-center">
@@ -59,53 +109,3 @@
     </div>
   </div>
 </template>
-
-<script setup>
-import { ref, computed, onMounted } from 'vue'
-import { useContentStore } from '../../stores/content'
-
-const contentStore = useContentStore()
-const loading = ref(false)
-const selectedType = ref('post')
-
-const formData = ref({
-  name: '',
-  slug: '',
-  description: '',
-  type: 'post'
-})
-
-onMounted(async () => {
-  loading.value = true
-  await contentStore.fetchCategories()
-  loading.value = false
-})
-
-const filteredCategories = computed(() => {
-  if (selectedType.value === '') {
-    return contentStore.categories
-  }
-  return contentStore.categories.filter(c => c.type === selectedType.value)
-})
-
-async function addCategory() {
-  try {
-    await contentStore.createCategory(formData.value)
-    formData.value = { name: '', slug: '', description: '', type: 'post' }
-    alert('Category added successfully!')
-  } catch (error) {
-    alert('Error adding category: ' + error.message)
-  }
-}
-
-async function deleteCategory(id) {
-  if (confirm('Are you sure?')) {
-    try {
-      await contentStore.deleteCategory(id)
-      alert('Category deleted successfully!')
-    } catch (error) {
-      alert('Error deleting category: ' + error.message)
-    }
-  }
-}
-</script>
