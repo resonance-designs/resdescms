@@ -28,12 +28,14 @@ function renderPost(post, attrs) {
   const excerpt = escapeHtml(post.excerpt || '')
   const display = (attrs.display || 'full').toLowerCase()
   const link = `/post/${slug}`
+  const target = attrs.target === 'new' ? '_blank' : '_self'
+  const rel = target === '_blank' ? ' rel="noopener"' : ''
   const featured = post.featured_image ? `<img src="${resolveMediaUrl(post.featured_image)}" alt="${title}" class="w-full rounded mb-3">` : ''
   const contentHtml = post.content || ''
 
   switch (display) {
     case 'link':
-      return `<a href="${link}" class="text-rd-orange hover:underline">${title}</a>`
+      return `<a href="${link}" class="text-rd-orange hover:underline" target="${target}"${rel}>${title}</a>`
     case 'small':
       return `<div class="text-sm"><a href="${link}" class="text-rd-orange hover:underline">${title}</a>${excerpt ? ` — ${excerpt}` : ''}</div>`
     case 'medium':
@@ -61,7 +63,9 @@ function renderPage(page, attrs) {
   const slug = escapeHtml(page.slug)
   const title = escapeHtml(page.title || slug)
   const link = `/page/${slug}`
-  return `<a href="${link}" class="text-rd-orange hover:underline">${title}</a>`
+  const target = attrs.target === 'new' ? '_blank' : '_self'
+  const rel = target === '_blank' ? ' rel="noopener"' : ''
+  return `<a href="${link}" class="text-rd-orange hover:underline" target="${target}"${rel}>${title}</a>`
 }
 
 function renderMedia(media, attrs) {

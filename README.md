@@ -40,8 +40,8 @@ A modern, full-featured CMS built with Vue 3 + Vite, Express.js, and SQLite.
 - Media uploads are served from the API (`/uploads/<file>`). If your frontend and backend run on different origins, set `VITE_API_BASE` to the API origin (e.g., `http://localhost:3001`) in your `.env` and restart `npm run dev` so media URLs and API calls resolve correctly.
 
 ## Shortcodes
-- `[post slug="welcome-to-resdescms" display="full|medium|small|link"]` renders a post snippet or link.
-- `[page slug="about" display="link"]` renders a link to a page by slug.
+- `[post slug="welcome-to-resdescms" display="full|medium|small|link" target="same|new"]` renders a post snippet or link (`target` only applies to `display="link"`; defaults to same tab).
+- `[page slug="about" display="link" target="same|new"]` renders a link to a page by slug (`target` optional, defaults to same tab).
 - `[media id="5" width="300px"]` renders an image from the media library (width optional).
 
 ## Changelog
