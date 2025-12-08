@@ -18,177 +18,262 @@ db.configure('busyTimeout', 5000)
 
 export function ensureTablesExist() {
   db.serialize(() => {
-    db.run(`
-      CREATE TABLE IF NOT EXISTS users (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        username TEXT UNIQUE NOT NULL,
-        password TEXT NOT NULL,
-        email TEXT,
-        created_at DATETIME DEFAULT CURRENT_TIMESTAMP
-      )
-    `, (err) => {
-      if (err) console.error('Error creating users table:', err)
-
-      db.get('SELECT * FROM users WHERE username = ?', ['resonancedesigns'], (err, row) => {
-        if (!row && !err) {
-          const hashedPassword = bcryptjs.hashSync('i4Vc$oUU%AR!WK3W', 10)
-          db.run(
-            'INSERT INTO users (username, password, email) VALUES (?, ?, ?)',
-            ['resonancedesigns', hashedPassword, 'info@resonancedesigns.dev'],
-            (err) => {
-              if (err) console.error('Error inserting default user:', err)
-              else console.log('Default admin user created')
-            }
-          )
-        }
-      })
-    })
-
-    db.run(`
-      CREATE TABLE IF NOT EXISTS categories (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        name TEXT NOT NULL UNIQUE,
-        slug TEXT NOT NULL UNIQUE,
-        description TEXT,
-        type TEXT NOT NULL,
-        created_at DATETIME DEFAULT CURRENT_TIMESTAMP
-      )
-    `, (err) => {
-      if (err) console.error('Error creating categories table:', err)
-    })
-
-    db.run(`
-      CREATE TABLE IF NOT EXISTS posts (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        title TEXT NOT NULL,
-        slug TEXT UNIQUE NOT NULL,
-        content TEXT,
-        excerpt TEXT,
-        featured_image TEXT,
-        category_id INTEGER,
-        published INTEGER DEFAULT 0,
-        created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-        updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-        FOREIGN KEY (category_id) REFERENCES categories(id)
-      )
-    `, (err) => {
-      if (err) console.error('Error creating posts table:', err)
-    })
-
-    db.run(`
-      CREATE TABLE IF NOT EXISTS pages (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        title TEXT NOT NULL,
-        slug TEXT UNIQUE NOT NULL,
-        content TEXT,
-        featured_image TEXT,
-        category_id INTEGER,
-        published INTEGER DEFAULT 0,
-        created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-        updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-        FOREIGN KEY (category_id) REFERENCES categories(id)
-      )
-    `, (err) => {
-      if (err) console.error('Error creating pages table:', err)
-    })
-
-    db.run(`
-      CREATE TABLE IF NOT EXISTS media (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        filename TEXT NOT NULL,
-        url TEXT NOT NULL,
-        mime_type TEXT,
-        size INTEGER,
-        created_at DATETIME DEFAULT CURRENT_TIMESTAMP
-      )
-    `, (err) => {
-      if (err) console.error('Error creating media table:', err)
-    })
-
-    db.run(`
-      CREATE TABLE IF NOT EXISTS navigation (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        label TEXT NOT NULL,
-        url TEXT NOT NULL,
-        page_id INTEGER,
-        order_index INTEGER,
-        created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-        FOREIGN KEY (page_id) REFERENCES pages(id)
-      )
-    `, (err) => {
-      if (err) console.error('Error creating navigation table:', err)
-    })
-
-    db.run(`
-      CREATE TABLE IF NOT EXISTS navigation_menus (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        name TEXT NOT NULL,
-        slug TEXT UNIQUE NOT NULL,
-        is_default INTEGER DEFAULT 0,
-        created_at DATETIME DEFAULT CURRENT_TIMESTAMP
-      )
-    `, (err) => {
-      if (err) console.error('Error creating navigation_menus table:', err)
-    })
-
-    db.run(`
-      CREATE TABLE IF NOT EXISTS navigation_items (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        menu_id INTEGER NOT NULL,
-        label TEXT NOT NULL,
-        url TEXT NOT NULL,
-        page_id INTEGER,
-        target TEXT DEFAULT '_self',
-        order_index INTEGER,
-        created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-        FOREIGN KEY (menu_id) REFERENCES navigation_menus(id),
-        FOREIGN KEY (page_id) REFERENCES pages(id)
-      )
-    `, (err) => {
-      if (err) console.error('Error creating navigation_items table:', err)
-    })
-
-    db.run(`
-      CREATE TABLE IF NOT EXISTS settings (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        key TEXT UNIQUE NOT NULL,
-        value TEXT,
-        updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
-      )
-    `, (err) => {
-      if (err) console.error('Error creating settings table:', err)
-    })
-
-    db.run(`
-      CREATE TABLE IF NOT EXISTS design_settings (
-        id INTEGER PRIMARY KEY,
-        settings TEXT,
-        updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
-      )
-    `, (err) => {
-      if (err) console.error('Error creating design_settings table:', err)
-    })
-
-    db.run(`
-      CREATE TABLE IF NOT EXISTS themes (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        slug TEXT UNIQUE NOT NULL,
-        name TEXT,
-        version TEXT,
-        author TEXT,
-        description TEXT,
-        is_active INTEGER DEFAULT 0,
-        settings TEXT,
-        manifest TEXT,
-        created_at DATETIME DEFAULT CURRENT_TIMESTAMP
-      )
-    `, (err) => {
-      if (err) console.error('Error creating themes table:', err)
-    })
-
+    createTables()
+    migrateLegacyTables()
     addMissingColumns()
     seedDefaults()
   })
+}
+
+function createTables() {
+  db.run(`
+    CREATE TABLE IF NOT EXISTS rdcms_users (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      username TEXT UNIQUE NOT NULL,
+      password TEXT NOT NULL,
+      email TEXT,
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+    )
+  `, (err) => {
+    if (err) console.error('Error creating users table:', err)
+
+    db.get('SELECT * FROM rdcms_users WHERE username = ?', ['resonancedesigns'], (err, row) => {
+      if (!row && !err) {
+        const hashedPassword = bcryptjs.hashSync('i4Vc$oUU%AR!WK3W', 10)
+        db.run(
+          'INSERT INTO rdcms_users (username, password, email) VALUES (?, ?, ?)',
+          ['resonancedesigns', hashedPassword, 'info@resonancedesigns.dev'],
+          (err) => {
+            if (err) console.error('Error inserting default user:', err)
+            else console.log('Default admin user created')
+          }
+        )
+      }
+    })
+  })
+
+  db.run(`
+    CREATE TABLE IF NOT EXISTS rdcms_categories (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      name TEXT NOT NULL UNIQUE,
+      slug TEXT NOT NULL UNIQUE,
+      description TEXT,
+      type TEXT NOT NULL,
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+    )
+  `, (err) => {
+    if (err) console.error('Error creating categories table:', err)
+  })
+
+  db.run(`
+    CREATE TABLE IF NOT EXISTS rdcms_posts (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      title TEXT NOT NULL,
+      slug TEXT UNIQUE NOT NULL,
+      content TEXT,
+      excerpt TEXT,
+      featured_image TEXT,
+      category_id INTEGER,
+      post_type TEXT DEFAULT 'post',
+      published INTEGER DEFAULT 0,
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+      updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+      FOREIGN KEY (category_id) REFERENCES rdcms_categories(id)
+    )
+  `, (err) => {
+    if (err) console.error('Error creating posts table:', err)
+  })
+
+  db.run(`
+    CREATE TABLE IF NOT EXISTS rdcms_pages (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      title TEXT NOT NULL,
+      slug TEXT UNIQUE NOT NULL,
+      content TEXT,
+      featured_image TEXT,
+      category_id INTEGER,
+      published INTEGER DEFAULT 0,
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+      updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+      layout_json TEXT,
+      FOREIGN KEY (category_id) REFERENCES rdcms_categories(id)
+    )
+  `, (err) => {
+    if (err) console.error('Error creating pages table:', err)
+  })
+
+  db.run(`
+    CREATE TABLE IF NOT EXISTS rdcms_media (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      filename TEXT NOT NULL,
+      url TEXT NOT NULL,
+      mime_type TEXT,
+      size INTEGER,
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+    )
+  `, (err) => {
+    if (err) console.error('Error creating media table:', err)
+  })
+
+  db.run(`
+    CREATE TABLE IF NOT EXISTS rdcms_navigation_menus (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      name TEXT NOT NULL,
+      slug TEXT UNIQUE NOT NULL,
+      is_default INTEGER DEFAULT 0,
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+    )
+  `, (err) => {
+    if (err) console.error('Error creating navigation_menus table:', err)
+  })
+
+  db.run(`
+    CREATE TABLE IF NOT EXISTS rdcms_navigation_items (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      menu_id INTEGER NOT NULL,
+      label TEXT NOT NULL,
+      url TEXT NOT NULL,
+      page_id INTEGER,
+      target TEXT DEFAULT '_self',
+      order_index INTEGER,
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+      FOREIGN KEY (menu_id) REFERENCES rdcms_navigation_menus(id),
+      FOREIGN KEY (page_id) REFERENCES rdcms_pages(id)
+    )
+  `, (err) => {
+    if (err) console.error('Error creating navigation_items table:', err)
+  })
+
+  db.run(`
+    CREATE TABLE IF NOT EXISTS rdcms_settings (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      key TEXT UNIQUE NOT NULL,
+      value TEXT,
+      updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+    )
+  `, (err) => {
+    if (err) console.error('Error creating settings table:', err)
+  })
+
+  db.run(`
+    CREATE TABLE IF NOT EXISTS rdcms_design_settings (
+      id INTEGER PRIMARY KEY,
+      settings TEXT,
+      updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+    )
+  `, (err) => {
+    if (err) console.error('Error creating design_settings table:', err)
+  })
+
+  db.run(`
+    CREATE TABLE IF NOT EXISTS rdcms_themes (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      slug TEXT UNIQUE NOT NULL,
+      name TEXT,
+      version TEXT,
+      author TEXT,
+      description TEXT,
+      is_active INTEGER DEFAULT 0,
+      settings TEXT,
+      manifest TEXT,
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+    )
+  `, (err) => {
+    if (err) console.error('Error creating themes table:', err)
+  })
+
+  db.run(`
+    CREATE TABLE IF NOT EXISTS rdcms_postmeta (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      post_id INTEGER NOT NULL,
+      meta_key TEXT NOT NULL,
+      meta_value TEXT,
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+      updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+      FOREIGN KEY (post_id) REFERENCES rdcms_posts(id)
+    )
+  `, (err) => {
+    if (err) console.error('Error creating postmeta table:', err)
+  })
+
+  db.run(`
+    CREATE TABLE IF NOT EXISTS rdcms_plugins (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      slug TEXT UNIQUE NOT NULL,
+      name TEXT,
+      version TEXT,
+      description TEXT,
+      is_active INTEGER DEFAULT 0,
+      settings TEXT,
+      manifest TEXT,
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+      updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+    )
+  `, (err) => {
+    if (err) console.error('Error creating plugins table:', err)
+  })
+}
+
+function migrateLegacyTables() {
+  const copyTable = (legacy, modern, columns, transformRow = (row) => row) => {
+    db.get(`SELECT name FROM sqlite_master WHERE type='table' AND name='${legacy}'`, (err, exists) => {
+      if (err || !exists) return
+      db.get(`SELECT COUNT(*) as count FROM ${modern}`, (err2, row) => {
+        if (err2 || row?.count > 0) return
+        db.all(`SELECT * FROM ${legacy}`, (err3, rows) => {
+          if (err3 || !rows) return
+          const placeholders = columns.map(() => '?').join(', ')
+          rows.forEach((r) => {
+            const mapped = transformRow(r)
+            const values = columns.map(col => mapped[col] ?? null)
+            db.run(`INSERT OR IGNORE INTO ${modern} (${columns.join(',')}) VALUES (${placeholders})`, values, (insertErr) => {
+              if (insertErr) console.error(`Error migrating row from ${legacy} to ${modern}:`, insertErr)
+            })
+          })
+        })
+      })
+    })
+  }
+
+  copyTable('users', 'rdcms_users', ['id', 'username', 'password', 'email', 'created_at'])
+  copyTable('categories', 'rdcms_categories', ['id', 'name', 'slug', 'description', 'type', 'created_at'])
+  copyTable('posts', 'rdcms_posts',
+    ['id', 'title', 'slug', 'content', 'excerpt', 'featured_image', 'category_id', 'post_type', 'published', 'created_at', 'updated_at'],
+    (row) => ({ ...row, post_type: row.post_type || 'post' })
+  )
+  copyTable('pages', 'rdcms_pages',
+    ['id', 'title', 'slug', 'content', 'featured_image', 'category_id', 'published', 'created_at', 'updated_at', 'layout_json'])
+  copyTable('media', 'rdcms_media', ['id', 'filename', 'url', 'mime_type', 'size', 'created_at'])
+  copyTable('navigation_menus', 'rdcms_navigation_menus', ['id', 'name', 'slug', 'is_default', 'created_at'])
+  copyTable('navigation_items', 'rdcms_navigation_items', ['id', 'menu_id', 'label', 'url', 'page_id', 'target', 'order_index', 'created_at'])
+  copyTable('settings', 'rdcms_settings', ['id', 'key', 'value', 'updated_at'])
+  copyTable('design_settings', 'rdcms_design_settings', ['id', 'settings', 'updated_at'])
+  copyTable('themes', 'rdcms_themes', ['id', 'slug', 'name', 'version', 'author', 'description', 'is_active', 'settings', 'manifest', 'created_at'])
+  copyTable('plugins', 'rdcms_plugins', ['id', 'slug', 'name', 'version', 'description', 'is_active', 'settings', 'manifest', 'created_at', 'updated_at'])
+}
+
+function addMissingColumns() {
+  const addColumnIfMissing = (table, column, definition) => {
+    db.get(`SELECT name FROM sqlite_master WHERE type='table' AND name='${table}'`, (err, exists) => {
+      if (err || !exists) return
+      db.all(`PRAGMA table_info(${table})`, (infoErr, columns) => {
+        if (infoErr) return
+        const existsCol = columns.some(col => col.name === column)
+        if (!existsCol) {
+          db.run(`ALTER TABLE ${table} ADD COLUMN ${definition}`, alterErr => {
+            if (alterErr) console.error(`Error adding column ${column} to ${table}:`, alterErr)
+          })
+        }
+      })
+    })
+  }
+
+  addColumnIfMissing('rdcms_glink_tokens', 'access_token', 'access_token TEXT')
+  addColumnIfMissing('rdcms_glink_tokens', 'refresh_token', 'refresh_token TEXT')
+  addColumnIfMissing('rdcms_glink_tokens', 'scope', 'scope TEXT')
+  addColumnIfMissing('rdcms_glink_tokens', 'token_expiry', 'token_expiry INTEGER')
+  addColumnIfMissing('rdcms_glink_tokens', 'account_email', 'account_email TEXT')
+  addColumnIfMissing('rdcms_glink_tokens', 'account_id', 'account_id TEXT')
 }
 
 function seedDefaults() {
@@ -206,9 +291,9 @@ function seedDefaults() {
         <h1>Latest Posts</h1>
         <p>This is the default home page. It will list your posts once you add more.</p>
         <ul>
-          <li><strong>Welcome to ResDesCMS</strong> — A starter post to demo the platform.</li>
-          <li><strong>Design System Tips</strong> — How to keep your design consistent.</li>
-          <li><strong>Launching Your Site</strong> — Steps to go live.</li>
+          <li><strong>Welcome to ResDesCMS</strong> - A starter post to demo the platform.</li>
+          <li><strong>Design System Tips</strong> - How to keep your design consistent.</li>
+          <li><strong>Launching Your Site</strong> - Steps to go live.</li>
         </ul>
       `
     },
@@ -216,11 +301,11 @@ function seedDefaults() {
   ]
 
   defaultPosts.forEach(post => {
-    db.get('SELECT id FROM posts WHERE slug = ?', [post.slug], (err, row) => {
+    db.get('SELECT id FROM rdcms_posts WHERE slug = ?', [post.slug], (err, row) => {
       if (err) return console.error('Error checking post:', err)
       if (!row) {
         db.run(
-          `INSERT INTO posts (title, slug, content, excerpt, featured_image, published) VALUES (?, ?, ?, ?, ?, 1)`,
+          `INSERT INTO rdcms_posts (title, slug, content, excerpt, featured_image, post_type, published) VALUES (?, ?, ?, ?, ?, 'post', 1)`,
           [post.title, post.slug, post.content, post.excerpt, post.featured_image],
           (insertErr) => insertErr && console.error('Error seeding post:', insertErr)
         )
@@ -229,11 +314,11 @@ function seedDefaults() {
   })
 
   defaultPages.forEach(page => {
-    db.get('SELECT id FROM pages WHERE slug = ?', [page.slug], (err, row) => {
+    db.get('SELECT id FROM rdcms_pages WHERE slug = ?', [page.slug], (err, row) => {
       if (err) return console.error('Error checking page:', err)
       if (!row) {
         db.run(
-          `INSERT INTO pages (title, slug, content, published) VALUES (?, ?, ?, 1)`,
+          `INSERT INTO rdcms_pages (title, slug, content, published) VALUES (?, ?, ?, 1)`,
           [page.title, page.slug, page.content],
           (insertErr) => insertErr && console.error('Error seeding page:', insertErr)
         )
@@ -244,42 +329,14 @@ function seedDefaults() {
   seedNavigationMenus()
 }
 
-function addMissingColumns() {
-  const addColumnIfMissing = (table, column, definition) => {
-    db.get(`PRAGMA table_info(${table})`, (err, row) => {
-      if (err || !row) return
-      db.all(`PRAGMA table_info(${table})`, (infoErr, columns) => {
-        if (infoErr) return
-        const exists = columns.some(col => col.name === column)
-        if (!exists) {
-          db.run(`ALTER TABLE ${table} ADD COLUMN ${definition}`, alterErr => {
-            if (alterErr) console.error(`Error adding column ${column} to ${table}:`, alterErr)
-          })
-        }
-      })
-    })
-  }
-
-  addColumnIfMissing('posts', 'category_id', 'category_id INTEGER')
-  addColumnIfMissing('pages', 'category_id', 'category_id INTEGER')
-  addColumnIfMissing('posts', 'excerpt', 'excerpt TEXT')
-  addColumnIfMissing('posts', 'featured_image', 'featured_image TEXT')
-  addColumnIfMissing('pages', 'featured_image', 'featured_image TEXT')
-  addColumnIfMissing('posts', 'published', 'published INTEGER DEFAULT 0')
-  addColumnIfMissing('pages', 'published', 'published INTEGER DEFAULT 0')
-  addColumnIfMissing('navigation', 'page_id', 'page_id INTEGER')
-  addColumnIfMissing('pages', 'layout_json', 'layout_json TEXT')
-  addColumnIfMissing('navigation_items', 'target', "target TEXT DEFAULT '_self'")
-}
-
 function seedNavigationMenus() {
   const ensureDefaultMenu = () => {
-    db.get('SELECT id FROM navigation_menus WHERE is_default = 1', (err, row) => {
+    db.get('SELECT id FROM rdcms_navigation_menus WHERE is_default = 1', (err, row) => {
       if (err) return console.error('Error checking default navigation menu:', err)
       if (row) return ensureMenuItems(row.id)
 
       db.run(
-        'INSERT INTO navigation_menus (name, slug, is_default) VALUES (?, ?, 1)',
+        'INSERT INTO rdcms_navigation_menus (name, slug, is_default) VALUES (?, ?, 1)',
         ['Main Navigation', 'main'],
         function(insertErr) {
           if (insertErr) return console.error('Error creating default navigation menu:', insertErr)
@@ -290,30 +347,10 @@ function seedNavigationMenus() {
   }
 
   const ensureMenuItems = (menuId) => {
-    db.get('SELECT COUNT(*) as count FROM navigation_items WHERE menu_id = ?', [menuId], (err, row) => {
+    db.get('SELECT COUNT(*) as count FROM rdcms_navigation_items WHERE menu_id = ?', [menuId], (err, row) => {
       if (err) return console.error('Error counting navigation items:', err)
       if (row?.count > 0) return
-      migrateLegacyNavigation(menuId)
-    })
-  }
-
-  const migrateLegacyNavigation = (menuId) => {
-    db.get(`SELECT name FROM sqlite_master WHERE type='table' AND name='navigation'`, (err, exists) => {
-      if (err) return seedDefaultItems(menuId)
-      if (exists) {
-        db.all('SELECT * FROM navigation ORDER BY order_index', (navErr, rows) => {
-          if (navErr || !rows?.length) return seedDefaultItems(menuId)
-          rows.forEach((item, idx) => {
-            db.run(
-              'INSERT INTO navigation_items (menu_id, label, url, page_id, target, order_index) VALUES (?, ?, ?, ?, ?, ?)',
-              [menuId, item.label, item.url, item.page_id || null, item.target || '_self', idx],
-              (insertErr) => insertErr && console.error('Error migrating navigation item:', insertErr)
-            )
-          })
-        })
-      } else {
-        seedDefaultItems(menuId)
-      }
+      seedDefaultItems(menuId)
     })
   }
 
@@ -324,12 +361,12 @@ function seedNavigationMenus() {
     ]
 
     defaults.forEach((item, idx) => {
-      db.get('SELECT id, slug, title FROM pages WHERE slug = ?', [item.slug], (err, pageRow) => {
+      db.get('SELECT id, slug, title FROM rdcms_pages WHERE slug = ?', [item.slug], (err, pageRow) => {
         const label = pageRow?.title || item.label
         const url = pageRow ? `/page/${pageRow.slug}` : `/page/${item.slug}`
         const pageId = pageRow?.id || null
         db.run(
-          'INSERT INTO navigation_items (menu_id, label, url, page_id, target, order_index) VALUES (?, ?, ?, ?, ?, ?)',
+          'INSERT INTO rdcms_navigation_items (menu_id, label, url, page_id, target, order_index) VALUES (?, ?, ?, ?, ?, ?)',
           [menuId, label, url, pageId, '_self', idx],
           (insertErr) => insertErr && console.error('Error seeding navigation item:', insertErr)
         )

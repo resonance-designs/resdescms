@@ -3,12 +3,14 @@ import { ref, onMounted, computed } from 'vue'
 import { useRouter, useRoute, RouterLink, RouterView } from 'vue-router'
 import { useAuthStore } from '../../stores/auth'
 import { useContentStore } from '../../stores/content'
+import { usePluginStore } from '../../stores/plugins'
 import DashboardCard from '../../components/admin/DashboardCard.vue'
 
 const router = useRouter()
 const route = useRoute()
 const authStore = useAuthStore()
 const contentStore = useContentStore()
+const pluginStore = usePluginStore()
 
 const stats = ref({
   posts: 0,
@@ -19,10 +21,18 @@ const stats = ref({
 
 const recentPosts = ref([])
 const recentPages = ref([])
+const activePluginMenus = computed(() =>
+  (pluginStore.plugins || [])
+    .filter(p => p.isActive && p.adminMenu)
+    .flatMap(p => p.adminMenu)
+)
 
 const isRootAdmin = computed(() => route.path === '/admin')
 
 onMounted(async () => {
+  if (!pluginStore.plugins.length) {
+    await pluginStore.fetchPlugins()
+  }
   await contentStore.fetchPosts()
   await contentStore.fetchPages()
   await contentStore.fetchMedia()
@@ -64,8 +74,12 @@ function getPageTitle() {
     '/admin/navigation': 'Navigation',
     '/admin/settings': 'Settings',
     '/admin/users': 'Users',
-    '/admin/design': 'Design Settings'
+    '/admin/design': 'Design Settings',
+    '/admin/plugins': 'Plugins'
   }
+  activePluginMenus.value.forEach(menu => {
+    titles[menu.path] = menu.label
+  })
   
   for (const [routePath, title] of Object.entries(titles)) {
     if (path.startsWith(routePath)) {
@@ -141,6 +155,22 @@ function getPageTitle() {
           :class="{ 'bg-rd-orange': isActive('/admin/design') }"
         >
           Design
+        </RouterLink>
+        <RouterLink
+          to="/admin/plugins"
+          class="block px-4 py-2 rounded hover:bg-gray-800 transition"
+          :class="{ 'bg-rd-orange': isActive('/admin/plugins') }"
+        >
+          Plugins
+        </RouterLink>
+        <RouterLink
+          v-for="menu in activePluginMenus"
+          :key="menu.path"
+          :to="menu.path"
+          class="block px-4 py-2 rounded hover:bg-gray-800 transition"
+          :class="{ 'bg-rd-orange': isActive(menu.path) }"
+        >
+          {{ menu.label }}
         </RouterLink>
       </nav>
 

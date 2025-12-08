@@ -37,7 +37,8 @@ Single-repo CMS with a Vue 3 + Vite SPA frontend and an Express + SQLite backend
 
 - **Express** with routes for auth, users, posts, pages, categories, media, navigation menus/items, themes, design settings.
 - **Static**: Serves `/uploads` (media) and `/themes/<slug>` assets.
-- **Database**: SQLite (`server/cms.db`) with tables for users, posts, pages, media, categories, navigation_menus/navigation_items, settings, design_settings, themes.
+- **Database**: SQLite (`server/cms.db`) with tables for users, posts, pages, media, categories, navigation_menus/navigation_items, settings, design_settings, themes, plugins (all prefixed `rdcms_`).
+- **Plugins**: Core mounts plugin routes from `server/plugins/<slug>/routes.js`; admin menus come from plugin manifests and only render when the plugin is active. Bundled example: GLink for Google Analytics/AdSense.
 - **Navigation**: Multiple menus supported; items can target `_self` or `_blank`. Legacy `navigation` table is migrated into `navigation_items`.
 - **Themes**: Upload ZIP, extract to `server/themes/<slug>`, register manifest in DB; active theme stored in SQLite and injected via frontend loader.
 

@@ -1,5 +1,5 @@
 # ResDesCMS
-Version: **alpha** | Latest release: v0.1.4
+Version: **alpha** | Latest release: v0.2.0
 
 ## About
 A modern, full-featured CMS built with Vue 3 + Vite, Express.js, and SQLite.
@@ -17,6 +17,8 @@ A modern, full-featured CMS built with Vue 3 + Vite, Express.js, and SQLite.
 - Posts, pages, categories, navigation menus, media library
 - Multiple navigation menus with per-item targets; menu block element for layouts (horizontal/vertical)
 - Theme system with header/body/footer/sidebar builders and per-section spacing/borders
+- Extensible content via `post_type` and post metadata (rdcms_postmeta) for plugin-style additions
+- Plugin system with upload/activate workflow and bundled GLink plugin (Google Analytics/AdSense) configurable entirely from the admin UI
 - WordPress-style shortcodes for posts/pages/media in rich content
 - Admin panel with JWT auth and Pinia state
 - Tailwind CSS styling with custom theme tokens
@@ -38,6 +40,10 @@ A modern, full-featured CMS built with Vue 3 + Vite, Express.js, and SQLite.
 
 ## Media & API base
 - Media uploads are served from the API (`/uploads/<file>`). If your frontend and backend run on different origins, set `VITE_API_BASE` to the API origin (e.g., `http://localhost:3001`) in your `.env` and restart `npm run dev` so media URLs and API calls resolve correctly.
+
+## Plugins
+- Upload/activate plugins under **Admin -> Plugins**. Plugins mount their own API routes from `server/plugins/<slug>/routes.js` and expose admin menu items from their manifest (only shown when active).
+- Bundled example: **GLink** (Google Analytics/AdSense). Configure it from the GLink admin page (Client ID/Secret + redirect URI), connect to Google, then pick an account/property/stream to inject the GA4 tag. Optional env vars (`GLINK_CLIENT_ID`, `GLINK_CLIENT_SECRET`, `GLINK_REDIRECT_URI`) are supported but UI settings take priority.
 
 ## Shortcodes
 - `[post slug="welcome-to-resdescms" display="full|medium|small|link" target="same|new"]` renders a post snippet or link (`target` only applies to `display="link"`; defaults to same tab).

@@ -14,11 +14,14 @@ import pagesRoutes from './routes/pages.js'
 import mediaRoutes from './routes/media.js'
 import navigationRoutes from './routes/navigation.js'
 import themeRoutes from './routes/themes.js'
+import pluginRoutes from './routes/plugins.js'
 import { themesRoot, bootstrapThemesFromDisk } from './services/themeService.js'
+import { pluginsRoot, bootstrapPluginsFromDisk } from './services/pluginService.js'
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 const app = express()
 const PORT = process.env.PORT || 3001
+app.set('db', db)
 
 app.use(cors({
   origin: ['http://localhost:5173', 'http://localhost:3000', 'http://127.0.0.1:5173'],
@@ -31,6 +34,7 @@ app.use(express.json())
 app.use(express.urlencoded({ extended: true }))
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')))
 app.use('/themes', express.static(themesRoot))
+app.use('/plugins', express.static(pluginsRoot))
 
 app.use('/api/auth', authRoutes)
 app.use('/api/users', usersRoutes)
@@ -41,9 +45,11 @@ app.use('/api/pages', pagesRoutes)
 app.use('/api/media', mediaRoutes)
 app.use('/api/navigation', navigationRoutes)
 app.use('/api/themes', themeRoutes)
+app.use('/api/plugins', pluginRoutes)
 
 app.listen(PORT, () => {
   console.log(`ResDesCMS Server running on http://localhost:${PORT}`)
   db.ensureTablesExist()
   bootstrapThemesFromDisk().catch(err => console.error('Theme bootstrap failed:', err))
+  bootstrapPluginsFromDisk().catch(err => console.error('Plugin bootstrap failed:', err))
 })

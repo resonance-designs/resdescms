@@ -4,14 +4,31 @@ import { authenticateToken } from '../middleware/auth.js'
 
 const router = express.Router()
 
+async function getMetaForPost(postId) {
+  const metaRows = await db.all('SELECT meta_key, meta_value FROM rdcms_postmeta WHERE post_id = ?', [postId])
+  const meta = {}
+  metaRows.forEach(row => { meta[row.meta_key] = row.meta_value })
+  return meta
+}
+
+async function attachMeta(posts) {
+  if (!posts) return posts
+  const list = Array.isArray(posts) ? posts : [posts]
+  const withMeta = await Promise.all(list.map(async (p) => ({
+    ...p,
+    meta: await getMetaForPost(p.id)
+  })))
+  return Array.isArray(posts) ? withMeta : withMeta[0]
+}
+
 router.get('/', async (req, res) => {
   try {
     const posts = await db.all(`
-      SELECT p.*, c.name as category_name FROM posts p
-      LEFT JOIN categories c ON p.category_id = c.id
+      SELECT p.*, c.name as category_name FROM rdcms_posts p
+      LEFT JOIN rdcms_categories c ON p.category_id = c.id
       ORDER BY p.created_at DESC
     `)
-    res.json(posts)
+    res.json(await attachMeta(posts))
   } catch (error) {
     res.status(500).json({ error: error.message })
   }
@@ -20,12 +37,12 @@ router.get('/', async (req, res) => {
 router.get('/slug/:slug', async (req, res) => {
   try {
     const post = await db.get(`
-      SELECT p.*, c.name as category_name FROM posts p
-      LEFT JOIN categories c ON p.category_id = c.id
+      SELECT p.*, c.name as category_name FROM rdcms_posts p
+      LEFT JOIN rdcms_categories c ON p.category_id = c.id
       WHERE p.slug = ?
     `, [req.params.slug])
     if (!post) return res.status(404).json({ error: 'Post not found' })
-    res.json(post)
+    res.json(await attachMeta(post))
   } catch (error) {
     res.status(500).json({ error: error.message })
   }
@@ -34,12 +51,12 @@ router.get('/slug/:slug', async (req, res) => {
 router.get('/:id', async (req, res) => {
   try {
     const post = await db.get(`
-      SELECT p.*, c.name as category_name FROM posts p
-      LEFT JOIN categories c ON p.category_id = c.id
+      SELECT p.*, c.name as category_name FROM rdcms_posts p
+      LEFT JOIN rdcms_categories c ON p.category_id = c.id
       WHERE p.id = ?
     `, [req.params.id])
     if (!post) return res.status(404).json({ error: 'Post not found' })
-    res.json(post)
+    res.json(await attachMeta(post))
   } catch (error) {
     res.status(500).json({ error: error.message })
   }
@@ -47,23 +64,34 @@ router.get('/:id', async (req, res) => {
 
 router.post('/', authenticateToken, async (req, res) => {
   try {
-    const { title, slug, content, excerpt, featured_image, category_id, published } = req.body
+    const { title, slug, content, excerpt, featured_image, category_id, published, post_type, meta } = req.body
 
     if (!title || !slug) {
       return res.status(400).json({ error: 'Title and slug are required' })
     }
 
     const result = await db.run(
-      'INSERT INTO posts (title, slug, content, excerpt, featured_image, category_id, published) VALUES (?, ?, ?, ?, ?, ?, ?)',
-      [title, slug, content, excerpt, featured_image, category_id || null, published ? 1 : 0]
+      'INSERT INTO rdcms_posts (title, slug, content, excerpt, featured_image, category_id, post_type, published) VALUES (?, ?, ?, ?, ?, ?, ?, ?)',
+      [title, slug, content, excerpt, featured_image, category_id || null, post_type || 'post', published ? 1 : 0]
     )
 
+    if (meta && typeof meta === 'object') {
+      await db.run('DELETE FROM rdcms_postmeta WHERE post_id = ?', [result.lastID])
+      for (const [key, value] of Object.entries(meta)) {
+        await db.run('INSERT INTO rdcms_postmeta (post_id, meta_key, meta_value) VALUES (?, ?, ?)', [
+          result.lastID,
+          key,
+          value
+        ])
+      }
+    }
+
     const post = await db.get(`
-      SELECT p.*, c.name as category_name FROM posts p
-      LEFT JOIN categories c ON p.category_id = c.id
+      SELECT p.*, c.name as category_name FROM rdcms_posts p
+      LEFT JOIN rdcms_categories c ON p.category_id = c.id
       WHERE p.id = ?
     `, [result.lastID])
-    res.json(post)
+    res.json(await attachMeta(post))
   } catch (error) {
     res.status(500).json({ error: error.message })
   }
@@ -71,19 +99,30 @@ router.post('/', authenticateToken, async (req, res) => {
 
 router.put('/:id', authenticateToken, async (req, res) => {
   try {
-    const { title, slug, content, excerpt, featured_image, category_id, published } = req.body
+    const { title, slug, content, excerpt, featured_image, category_id, published, post_type, meta } = req.body
 
     await db.run(
-      'UPDATE posts SET title = ?, slug = ?, content = ?, excerpt = ?, featured_image = ?, category_id = ?, published = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?',
-      [title, slug, content, excerpt, featured_image, category_id || null, published ? 1 : 0, req.params.id]
+      'UPDATE rdcms_posts SET title = ?, slug = ?, content = ?, excerpt = ?, featured_image = ?, category_id = ?, post_type = ?, published = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?',
+      [title, slug, content, excerpt, featured_image, category_id || null, post_type || 'post', published ? 1 : 0, req.params.id]
     )
 
+    if (meta && typeof meta === 'object') {
+      await db.run('DELETE FROM rdcms_postmeta WHERE post_id = ?', [req.params.id])
+      for (const [key, value] of Object.entries(meta)) {
+        await db.run('INSERT INTO rdcms_postmeta (post_id, meta_key, meta_value) VALUES (?, ?, ?)', [
+          req.params.id,
+          key,
+          value
+        ])
+      }
+    }
+
     const post = await db.get(`
-      SELECT p.*, c.name as category_name FROM posts p
-      LEFT JOIN categories c ON p.category_id = c.id
+      SELECT p.*, c.name as category_name FROM rdcms_posts p
+      LEFT JOIN rdcms_categories c ON p.category_id = c.id
       WHERE p.id = ?
     `, [req.params.id])
-    res.json(post)
+    res.json(await attachMeta(post))
   } catch (error) {
     res.status(500).json({ error: error.message })
   }
@@ -91,7 +130,8 @@ router.put('/:id', authenticateToken, async (req, res) => {
 
 router.delete('/:id', authenticateToken, async (req, res) => {
   try {
-    await db.run('DELETE FROM posts WHERE id = ?', [req.params.id])
+    await db.run('DELETE FROM rdcms_posts WHERE id = ?', [req.params.id])
+    await db.run('DELETE FROM rdcms_postmeta WHERE post_id = ?', [req.params.id])
     res.json({ success: true })
   } catch (error) {
     res.status(500).json({ error: error.message })

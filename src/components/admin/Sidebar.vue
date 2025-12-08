@@ -51,6 +51,9 @@ function handleLogout() {
       <RouterLink to="/admin/design" class="block px-4 py-2 rounded hover:bg-gray-800 transition" :class="{ 'bg-rd-orange': isActive('/admin/design') }">
         Design
       </RouterLink>
+      <RouterLink to="/admin/plugins" class="block px-4 py-2 rounded hover:bg-gray-800 transition" :class="{ 'bg-rd-orange': isActive('/admin/plugins') }">
+        Plugins
+      </RouterLink>
     </nav>
 
     <div class="mt-12 pt-6 border-t border-gray-700">

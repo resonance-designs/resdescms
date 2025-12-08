@@ -13,7 +13,7 @@ const db = new sqlite3.Database(dbPath, (err) => {
   console.log('Connected to SQLite database')
 })
 
-db.all('SELECT username, password FROM users WHERE username=?', ['resonancedesigns'], (err, rows) => {
+db.all('SELECT username, password FROM rdcms_users WHERE username=?', ['resonancedesigns'], (err, rows) => {
   if (err) {
     console.error('Query error:', err)
   } else {

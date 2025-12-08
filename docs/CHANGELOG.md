@@ -1,9 +1,17 @@
 # Changelog
 
+## v0.2.0 (alpha)
+
+-   Plugin architecture mounts plugin routes from `server/plugins/<slug>/routes.js`; admin menus render only when the plugin is active (no plugin code in core).
+-   Plugin system shipped with GLink (Google Analytics/AdSense); OAuth configurable from the admin UI (Client ID/Secret/redirect) with account/property selection. Account/property/stream picker, testing-mode GA tag injection.
+-   Plugin admin: deactivate hides routes/menus; delete supports removing files and (optionally) data via confirm modal.
+
 ## v0.1.4 (alpha)
 
 -   Added WordPress-style shortcodes for posts/pages/media in content (post/page `target` option for link display).
 -   Documentation moved to `/docs` with updated links and architecture diagram cleanup.
+-   Database refactor: all tables now prefixed with `rdcms_`, posts get `post_type`, and new `rdcms_postmeta` supports extensible content metadata.
+
 
 ## v0.1.3 (alpha)
 

@@ -94,6 +94,20 @@ Restart `npm run dev` after setting this so media URLs and API calls resolve cor
 -   Themes: `/api/themes`, `/api/themes/active`, `/api/themes/upload`
 -   Design settings: `/api/design`
 
+## Plugins & GLink (Google OAuth)
+
+Plugins can be uploaded/activated in **Admin -> Plugins**. Each plugin mounts its own API routes from `server/plugins/<slug>/routes.js` and only exposes admin menu links when active.
+
+GLink (bundled) connects Google Analytics/AdSense without needing shell access.
+
+1. Go to **Admin -> GLink** (visible when the GLink plugin is active).
+2. In Google Cloud Console, create an OAuth Client (Web application) and add the redirect URI shown in the UI (defaults to `http://localhost:3001/api/plugins/glink/callback`).
+3. Enable the Google Analytics Admin/Data API and Analytics Admin scopes.
+4. Paste the Client ID and Client Secret into the GLink UI, save, then click **Connect to Google**.
+5. After consent, choose an Analytics account and property, then select a Web Stream to populate the Measurement ID. Save to inject the GA4 tag. Testing mode sets `cookie_domain` to `none` for the tag.
+
+Optional env vars (`GLINK_CLIENT_ID`, `GLINK_CLIENT_SECRET`, `GLINK_REDIRECT_URI`) are supported, but UI values override them.
+
 ## Environment Variables
 
 Create `.env` (backend):
