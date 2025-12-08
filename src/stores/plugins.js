@@ -8,6 +8,7 @@ export const usePluginStore = defineStore('plugins', () => {
   const plugins = ref([])
   const loading = ref(false)
   const scriptsInjected = ref(false)
+  const gitRepos = ref([])
   const injectedGaId = ref(null)
 
   async function fetchPlugins() {
@@ -44,6 +45,18 @@ export const usePluginStore = defineStore('plugins', () => {
   async function deletePlugin(slug, options = { deleteFiles: true, deleteData: false }) {
     await axios.delete(`${API_BASE_URL}/api/plugins/${slug}`, { data: options })
     return fetchPlugins()
+  }
+
+  async function fetchGitRepos() {
+    try {
+      const { data } = await axios.get(`${API_BASE_URL}/api/plugins/gitlink/repos`)
+      gitRepos.value = data || []
+      return gitRepos.value
+    } catch (err) {
+      console.error('Failed to fetch GitLink repos', err)
+      gitRepos.value = []
+      return []
+    }
   }
 
   async function saveSettings(slug, settings) {
@@ -114,11 +127,13 @@ export const usePluginStore = defineStore('plugins', () => {
   return {
     plugins,
     loading,
+    gitRepos,
     fetchPlugins,
     installPlugin,
     activatePlugin,
     deactivatePlugin,
     deletePlugin,
+    fetchGitRepos,
     saveSettings,
     activePlugins,
     injectClientScripts

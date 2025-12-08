@@ -156,13 +156,13 @@ function getPageTitle() {
         >
           Design
         </RouterLink>
-        <RouterLink
-          to="/admin/plugins"
-          class="block px-4 py-2 rounded hover:bg-gray-800 transition"
-          :class="{ 'bg-rd-orange': isActive('/admin/plugins') }"
-        >
-          Plugins
-        </RouterLink>
+      <RouterLink
+        to="/admin/plugins"
+        class="block px-4 py-2 rounded hover:bg-gray-800 transition"
+        :class="{ 'bg-rd-orange': isActive('/admin/plugins') }"
+      >
+        Plugins
+      </RouterLink>
         <RouterLink
           v-for="menu in activePluginMenus"
           :key="menu.path"

@@ -1,5 +1,5 @@
 # ResDesCMS
-Version: **alpha** | Latest release: v0.2.0
+Version: **alpha** | Latest release: v0.2.1
 
 ## About
 A modern, full-featured CMS built with Vue 3 + Vite, Express.js, and SQLite.
@@ -43,7 +43,10 @@ A modern, full-featured CMS built with Vue 3 + Vite, Express.js, and SQLite.
 
 ## Plugins
 - Upload/activate plugins under **Admin -> Plugins**. Plugins mount their own API routes from `server/plugins/<slug>/routes.js` and expose admin menu items from their manifest (only shown when active).
-- Bundled example: **GLink** (Google Analytics/AdSense). Configure it from the GLink admin page (Client ID/Secret + redirect URI), connect to Google, then pick an account/property/stream to inject the GA4 tag. Optional env vars (`GLINK_CLIENT_ID`, `GLINK_CLIENT_SECRET`, `GLINK_REDIRECT_URI`) are supported but UI settings take priority.
+- Bundled examples:
+  - **GLink** (Google Analytics/AdSense): Configure via admin (Client ID/Secret + redirect URI), connect to Google, then pick account/property/stream to inject the GA4 tag. Optional env vars (`GLINK_CLIENT_ID`, `GLINK_CLIENT_SECRET`, `GLINK_REDIRECT_URI`) are supported but UI settings take priority.
+  - **GitLink** (GitHub): Connect via OAuth to list repos, render via `[gitlink mode="small-list|medium-list"]` shortcode or the “GitHub Repos” block element. Optional env vars (`GITLINK_CLIENT_ID`, `GITLINK_CLIENT_SECRET`, `GITLINK_REDIRECT_URI`) are supported but UI settings take priority.
+- Plugin admin UIs are loaded from each plugin’s manifest (`adminView`), keeping plugin frontends bundled with the plugin.
 
 ## Shortcodes
 - `[post slug="welcome-to-resdescms" display="full|medium|small|link" target="same|new"]` renders a post snippet or link (`target` only applies to `display="link"`; defaults to same tab).

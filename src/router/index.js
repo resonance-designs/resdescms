@@ -107,10 +107,10 @@ const routes = [
         meta: { requiresAuth: true }
       },
       {
-        path: 'glink',
-        name: 'admin-glink',
-        component: () => import('../views/admin/GLink.vue'),
-        meta: { requiresAuth: true, plugin: 'glink' }
+        path: ':plugin',
+        name: 'admin-plugin-host',
+        component: () => import('../views/admin/PluginHost.vue'),
+        meta: { requiresAuth: true, plugin: 'dynamic' }
       }
     ]
   }
@@ -135,7 +135,8 @@ router.beforeEach((to, from, next) => {
       if (!pluginStore.plugins.length) {
         await pluginStore.fetchPlugins()
       }
-      const isActive = pluginStore.plugins.find(p => p.slug === requiresPlugin)?.isActive
+      const slug = to.params.plugin || to.path.replace('/admin/', '').split('/')[0]
+      const isActive = pluginStore.plugins.find(p => p.slug === slug)?.isActive
       if (isActive) {
         next()
       } else {

@@ -1,7 +1,7 @@
 <script setup>
 import { onMounted, reactive, ref } from 'vue'
 import axios from 'axios'
-import { usePluginStore } from '../../stores/plugins'
+import { usePluginStore } from '../../../src/stores/plugins'
 
 const API_BASE_URL = (import.meta.env.VITE_API_BASE || 'http://localhost:3001').replace(/\/+$/, '')
 const pluginStore = usePluginStore()
@@ -126,7 +126,6 @@ function pickProperty(prop) {
   form.gaId = prop.measurementId || ''
   streams.value = []
   if (!form.gaId && prop.id) {
-    // fetch measurementId for this property
     axios.get(`${API_BASE_URL}/api/plugins/glink/properties/${prop.id}/streams`).then(({ data }) => {
       streams.value = data.streams || []
       form.gaId = data.measurementId || ''
@@ -175,7 +174,6 @@ async function createProperty() {
     if (data?.id) {
       properties.value.push(data)
       pickProperty(data)
-      // Persist settings so tracking starts immediately when a Measurement ID is available
       if (form.gaId) {
         await pluginStore.saveSettings('glink', { ...form })
       }
@@ -284,20 +282,6 @@ async function createProperty() {
           </button>
         </div>
       </div>
-      <div v-if="streams.length" class="space-y-2">
-        <p class="text-sm font-semibold text-gray-800">Choose Web Stream</p>
-        <div class="flex flex-wrap gap-2">
-          <button
-            v-for="stream in streams"
-            :key="stream.id"
-            class="px-3 py-2 rounded border"
-            :class="form.gaId === stream.measurementId ? 'border-rd-orange text-rd-orange' : 'border-gray-300 text-gray-700'"
-            @click="() => { form.gaId = stream.measurementId || ''; measurementMessage.value = 'Measurement ID loaded from selected stream.'; }"
-          >
-            {{ stream.name }} ({{ stream.measurementId || 'No ID' }})
-          </button>
-        </div>
-      </div>
       <div v-else-if="propertiesError" class="p-3 bg-red-50 border border-red-200 rounded text-sm text-red-800 space-y-2">
         <p>{{ propertiesError }}</p>
         <p v-if="propertiesErrorStatus" class="text-xs text-red-700">Status: {{ propertiesErrorStatus }}</p>
@@ -313,6 +297,20 @@ async function createProperty() {
         >
           Enable API
         </a>
+      </div>
+      <div v-if="streams.length" class="space-y-2">
+        <p class="text-sm font-semibold text-gray-800">Choose Web Stream</p>
+        <div class="flex flex-wrap gap-2">
+          <button
+            v-for="stream in streams"
+            :key="stream.id"
+            class="px-3 py-2 rounded border"
+            :class="form.gaId === stream.measurementId ? 'border-rd-orange text-rd-orange' : 'border-gray-300 text-gray-700'"
+            @click="() => { form.gaId = stream.measurementId || ''; measurementMessage.value = 'Measurement ID loaded from selected stream.'; }"
+          >
+            {{ stream.name }} ({{ stream.measurementId || 'No ID' }})
+          </button>
+        </div>
       </div>
     </div>
 
@@ -343,7 +341,7 @@ async function createProperty() {
       <button class="bg-rd-orange text-white px-4 py-2 rounded disabled:opacity-50" :disabled="loading" @click="save">
         {{ loading ? 'Saving...' : 'Save Settings' }}
       </button>
-      <RouterLink to="/admin/plugins" class="text-sm text-gray-600 hover:text-gray-900">Back to Plugins</RouterLink>
+      <a href="/admin/plugins" class="text-sm text-gray-600 hover:text-gray-900">Back to Plugins</a>
     </div>
 
     <div class="border-t pt-4 space-y-3">
