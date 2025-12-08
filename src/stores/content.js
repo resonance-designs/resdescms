@@ -7,7 +7,7 @@ export const useContentStore = defineStore('content', () => {
   const pages = ref([])
   const categories = ref([])
   const media = ref([])
-  const navigation = ref([])
+  const navigationMenus = ref([])
   const loading = ref(false)
 
   async function fetchPosts() {
@@ -162,22 +162,56 @@ export const useContentStore = defineStore('content', () => {
     }
   }
 
-  async function fetchNavigation() {
+  async function fetchNavigationMenus() {
     try {
       const response = await axios.get('http://localhost:3001/api/navigation')
-      navigation.value = response.data
+      navigationMenus.value = response.data?.menus || []
+      return navigationMenus.value
     } catch (error) {
-      console.error('Failed to fetch navigation:', error)
+      console.error('Failed to fetch navigation menus:', error)
+      return []
     }
   }
 
-  async function updateNavigation(items) {
+  async function createNavigationMenu(menu) {
     try {
-      const response = await axios.put('http://localhost:3001/api/navigation', { items })
-      navigation.value = response.data
-      return response.data
+      const { data } = await axios.post('http://localhost:3001/api/navigation', menu)
+      await fetchNavigationMenus()
+      return data?.menu || null
     } catch (error) {
-      console.error('Failed to update navigation:', error)
+      console.error('Failed to create navigation menu:', error)
+      throw error
+    }
+  }
+
+  async function updateNavigationMenu(id, payload) {
+    try {
+      const { data } = await axios.put(`http://localhost:3001/api/navigation/${id}`, payload)
+      await fetchNavigationMenus()
+      return data?.menu || null
+    } catch (error) {
+      console.error('Failed to update navigation menu:', error)
+      throw error
+    }
+  }
+
+  async function updateNavigationItems(menuId, items) {
+    try {
+      const { data } = await axios.put(`http://localhost:3001/api/navigation/${menuId}/items`, { items })
+      await fetchNavigationMenus()
+      return data?.menu || null
+    } catch (error) {
+      console.error('Failed to update navigation items:', error)
+      throw error
+    }
+  }
+
+  async function deleteNavigationMenu(id) {
+    try {
+      await axios.delete(`http://localhost:3001/api/navigation/${id}`)
+      return fetchNavigationMenus()
+    } catch (error) {
+      console.error('Failed to delete navigation menu:', error)
       throw error
     }
   }
@@ -230,7 +264,7 @@ export const useContentStore = defineStore('content', () => {
     pages,
     categories,
     media,
-    navigation,
+    navigationMenus,
     loading,
     fetchPosts,
     fetchPost,
@@ -250,7 +284,10 @@ export const useContentStore = defineStore('content', () => {
     fetchMedia,
     uploadMedia,
     deleteMedia,
-    fetchNavigation,
-    updateNavigation
+    fetchNavigationMenus,
+    createNavigationMenu,
+    updateNavigationMenu,
+    updateNavigationItems,
+    deleteNavigationMenu
   }
 })

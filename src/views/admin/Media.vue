@@ -7,6 +7,14 @@ const media = ref([])
 const loading = ref(false)
 const uploading = ref(false)
 const selectedFile = ref(null)
+const apiBase = import.meta.env.VITE_API_BASE || 'http://localhost:3001'
+
+function resolveMediaUrl(url) {
+  if (!url) return ''
+  if (/^https?:\/\//i.test(url)) return url
+  if (url.startsWith('//')) return window.location.protocol + url
+  return `${apiBase}${url.startsWith('/') ? '' : '/'}${url}`
+}
 
 onMounted(async () => {
   loading.value = true
@@ -58,7 +66,7 @@ async function deleteMedia(id) {
       <div v-else-if="media.length === 0" class="p-6 text-center text-gray-600">No media uploaded yet.</div>
       <div v-else class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4 p-6">
         <div v-for="item in media" :key="item.id" class="relative group">
-          <img :src="item.url" :alt="item.filename" class="w-full aspect-square object-cover rounded">
+          <img :src="resolveMediaUrl(item.url)" :alt="item.filename" class="w-full aspect-square object-cover rounded">
           <button @click="deleteMedia(item.id)" class="absolute top-2 right-2 bg-red-600 text-white p-2 rounded opacity-0 group-hover:opacity-100 transition">
             ✕
           </button>

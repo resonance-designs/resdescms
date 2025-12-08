@@ -120,6 +120,35 @@ export function ensureTablesExist() {
     })
 
     db.run(`
+      CREATE TABLE IF NOT EXISTS navigation_menus (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        name TEXT NOT NULL,
+        slug TEXT UNIQUE NOT NULL,
+        is_default INTEGER DEFAULT 0,
+        created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+      )
+    `, (err) => {
+      if (err) console.error('Error creating navigation_menus table:', err)
+    })
+
+    db.run(`
+      CREATE TABLE IF NOT EXISTS navigation_items (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        menu_id INTEGER NOT NULL,
+        label TEXT NOT NULL,
+        url TEXT NOT NULL,
+        page_id INTEGER,
+        target TEXT DEFAULT '_self',
+        order_index INTEGER,
+        created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+        FOREIGN KEY (menu_id) REFERENCES navigation_menus(id),
+        FOREIGN KEY (page_id) REFERENCES pages(id)
+      )
+    `, (err) => {
+      if (err) console.error('Error creating navigation_items table:', err)
+    })
+
+    db.run(`
       CREATE TABLE IF NOT EXISTS settings (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         key TEXT UNIQUE NOT NULL,
@@ -211,6 +240,8 @@ function seedDefaults() {
       }
     })
   })
+
+  seedNavigationMenus()
 }
 
 function addMissingColumns() {
@@ -238,6 +269,75 @@ function addMissingColumns() {
   addColumnIfMissing('pages', 'published', 'published INTEGER DEFAULT 0')
   addColumnIfMissing('navigation', 'page_id', 'page_id INTEGER')
   addColumnIfMissing('pages', 'layout_json', 'layout_json TEXT')
+  addColumnIfMissing('navigation_items', 'target', "target TEXT DEFAULT '_self'")
+}
+
+function seedNavigationMenus() {
+  const ensureDefaultMenu = () => {
+    db.get('SELECT id FROM navigation_menus WHERE is_default = 1', (err, row) => {
+      if (err) return console.error('Error checking default navigation menu:', err)
+      if (row) return ensureMenuItems(row.id)
+
+      db.run(
+        'INSERT INTO navigation_menus (name, slug, is_default) VALUES (?, ?, 1)',
+        ['Main Navigation', 'main'],
+        function(insertErr) {
+          if (insertErr) return console.error('Error creating default navigation menu:', insertErr)
+          ensureMenuItems(this.lastID)
+        }
+      )
+    })
+  }
+
+  const ensureMenuItems = (menuId) => {
+    db.get('SELECT COUNT(*) as count FROM navigation_items WHERE menu_id = ?', [menuId], (err, row) => {
+      if (err) return console.error('Error counting navigation items:', err)
+      if (row?.count > 0) return
+      migrateLegacyNavigation(menuId)
+    })
+  }
+
+  const migrateLegacyNavigation = (menuId) => {
+    db.get(`SELECT name FROM sqlite_master WHERE type='table' AND name='navigation'`, (err, exists) => {
+      if (err) return seedDefaultItems(menuId)
+      if (exists) {
+        db.all('SELECT * FROM navigation ORDER BY order_index', (navErr, rows) => {
+          if (navErr || !rows?.length) return seedDefaultItems(menuId)
+          rows.forEach((item, idx) => {
+            db.run(
+              'INSERT INTO navigation_items (menu_id, label, url, page_id, target, order_index) VALUES (?, ?, ?, ?, ?, ?)',
+              [menuId, item.label, item.url, item.page_id || null, item.target || '_self', idx],
+              (insertErr) => insertErr && console.error('Error migrating navigation item:', insertErr)
+            )
+          })
+        })
+      } else {
+        seedDefaultItems(menuId)
+      }
+    })
+  }
+
+  const seedDefaultItems = (menuId) => {
+    const defaults = [
+      { label: 'Posts', slug: 'posts' },
+      { label: 'About', slug: 'about' }
+    ]
+
+    defaults.forEach((item, idx) => {
+      db.get('SELECT id, slug, title FROM pages WHERE slug = ?', [item.slug], (err, pageRow) => {
+        const label = pageRow?.title || item.label
+        const url = pageRow ? `/page/${pageRow.slug}` : `/page/${item.slug}`
+        const pageId = pageRow?.id || null
+        db.run(
+          'INSERT INTO navigation_items (menu_id, label, url, page_id, target, order_index) VALUES (?, ?, ?, ?, ?, ?)',
+          [menuId, label, url, pageId, '_self', idx],
+          (insertErr) => insertErr && console.error('Error seeding navigation item:', insertErr)
+        )
+      })
+    })
+  }
+
+  ensureDefaultMenu()
 }
 
 export function run(sql, params = []) {

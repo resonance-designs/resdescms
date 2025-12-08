@@ -1,5 +1,5 @@
 <script setup>
-import { ref, onMounted, computed, h } from 'vue'
+import { ref, onMounted, computed, h, watch } from 'vue'
 import { useRoute, RouterLink } from 'vue-router'
 import { useContentStore } from '../stores/content'
 import { useThemeStore } from '../stores/theme'
@@ -8,15 +8,33 @@ const route = useRoute()
 const contentStore = useContentStore()
 const themeStore = useThemeStore()
 const page = ref(null)
+const apiBase = import.meta.env.VITE_API_BASE || 'http://localhost:3001'
 
-onMounted(async () => {
-  const slug = route.params.slug
+function resolveMediaUrl(url) {
+  if (!url) return ''
+  if (/^https?:\/\//i.test(url)) return url
+  if (url.startsWith('//')) return window.location.protocol + url
+  return `${apiBase}${url.startsWith('/') ? '' : '/'}${url}`
+}
+
+async function loadPage(slug) {
   page.value = await contentStore.fetchPageBySlug(slug)
   if (!page.value) {
     await contentStore.fetchPages()
     page.value = contentStore.pages.find(p => p.slug === slug)
   }
+  if (!contentStore.navigationMenus.length) {
+    await contentStore.fetchNavigationMenus()
+  }
   await themeStore.loadActiveTheme()
+}
+
+onMounted(async () => {
+  await loadPage(route.params.slug)
+})
+
+watch(() => route.params.slug, async (slug) => {
+  if (slug) await loadPage(slug)
 })
 
 const layoutData = computed(() => {
@@ -108,19 +126,47 @@ const ElementRenderer = {
           return h('div', { class: 'prose max-w-none whitespace-pre-wrap' }, el.data?.text || '')
         case 'media':
           if (el.data?.url?.match(/\.(mp4|webm|ogg)$/i)) {
-            return h('video', { class: 'w-full rounded', controls: true, src: el.data.url })
+            return h('video', { class: 'w-full rounded', controls: true, src: resolveMediaUrl(el.data.url) })
           }
-          return h('img', { class: 'w-full rounded object-contain', src: el.data?.url || '', alt: el.data?.name || '' })
+          return h('img', { class: 'w-full rounded object-contain', src: resolveMediaUrl(el.data?.url), alt: el.data?.name || '' })
         case 'gallery':
           return h('div', { class: 'grid grid-cols-2 md:grid-cols-3 gap-2' },
             (el.data?.items || []).map(item =>
-              h('img', { class: 'w-full h-32 object-cover rounded', src: item.url, alt: item.name || '' })
+              h('img', { class: 'w-full h-32 object-cover rounded', src: resolveMediaUrl(item.url), alt: item.name || '' })
             )
           )
         case 'custom':
           return h('div', { innerHTML: el.data?.html || '' })
         case 'posts':
           return h('div', { class: 'text-sm text-gray-600 italic' }, 'Posts element - render on frontend using settings.')
+        case 'menu': {
+          const menuId = el.data?.menuId ? Number(el.data.menuId) : null
+          const menu = menuId
+            ? contentStore.navigationMenus.find(m => m.id === menuId)
+            : contentStore.navigationMenus.find(m => m.is_default) || contentStore.navigationMenus[0]
+          const items = menu?.items || []
+          const orientation = el.data?.orientation === 'vertical' ? 'vertical' : 'horizontal'
+          const classes = orientation === 'vertical'
+            ? 'flex flex-col gap-2'
+            : 'flex flex-wrap items-center gap-4'
+
+          const linkNodes = items.map(item => {
+            const isExternal = item.url?.startsWith('http')
+            const to = item.page_id ? `/page/${item.page_slug || ''}` : item.url || '#'
+            const target = item.target === '_blank' ? '_blank' : '_self'
+            if (!isExternal && to?.startsWith('/') && target !== '_blank') {
+              return h(RouterLink, { to, class: 'text-rd-orange hover:underline' }, () => item.label || to)
+            }
+            return h('a', {
+              href: to,
+              class: 'text-rd-orange hover:underline',
+              target,
+              rel: target === '_blank' ? 'noopener' : undefined
+            }, item.label || to)
+          })
+
+          return h('nav', { class: classes }, linkNodes.length ? linkNodes : [h('span', { class: 'text-gray-400 text-sm' }, 'No menu items found')])
+        }
         default:
           return h('div', { class: 'text-xs text-gray-500' }, `Unsupported element: ${el.type}`)
       }
@@ -152,7 +198,7 @@ const ElementRenderer = {
         <article class="bg-white rounded-lg shadow-md" :style="`padding:${bodyPadding}; margin:${bodyMargin}`" :data-article-padding="bodyPadding">
           <h1 class="text-4xl font-bold font-avant-garde-demi text-gray-900 mb-8">{{ page.title }}</h1>
 
-          <img v-if="page.featured_image" :src="page.featured_image" :alt="page.title" class="w-full h-96 object-cover rounded-lg mb-8">
+          <img v-if="page.featured_image" :src="resolveMediaUrl(page.featured_image)" :alt="page.title" class="w-full h-96 object-cover rounded-lg mb-8">
 
           <template v-if="hasLayoutBlocks">
             <div class="grid" :style="layoutGridProps(layoutData)">
