@@ -7,8 +7,14 @@ import { IconExternalLink } from '@tabler/icons-vue';
 const API_BASE_URL = (import.meta.env.VITE_API_BASE || 'http://localhost:3001').replace(/\/+$/, '')
 const pluginStore = usePluginStore()
 
+const getAuthHeaders = () => {
+  const token = localStorage.getItem('token')
+  return token ? { Authorization: `Bearer ${token}` } : {}
+}
+
 const form = reactive({
   squareApplicationId: '',
+  squareApplicationSecret: '',
   squareAccessToken: '',
   squareLocationId: '',
   squareSandbox: true,
@@ -103,8 +109,8 @@ async function save() {
 
 async function connectSquare() {
   try {
-    if (!form.squareApplicationId || !form.squareAccessToken) {
-      alert('Enter Square Application ID and Access Token, save settings, then click Connect.')
+    if (!form.squareApplicationId || !form.squareApplicationSecret) {
+      alert('Enter Square Application ID and Application Secret, save settings, then click Connect.')
       return
     }
     await pluginStore.saveSettings('rdcommerce', { ...form })
@@ -167,8 +173,14 @@ function editProduct(product) {
 
 async function saveProduct() {
   try {
+    const slug = productForm.title
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, '-')
+      .replace(/(^-|-$)/g, '')
+      + '-' + Date.now()
     const productData = {
       title: productForm.title,
+      slug,
       content: productForm.content,
       post_type: 'product',
       published: true
@@ -182,9 +194,9 @@ async function saveProduct() {
     }
 
     if (editingProduct.value) {
-      await axios.put(`${API_BASE_URL}/api/posts/${editingProduct.value.id}`, { ...productData, meta })
+      await axios.put(`${API_BASE_URL}/api/posts/${editingProduct.value.id}`, { ...productData, meta }, { headers: getAuthHeaders() })
     } else {
-      await axios.post(`${API_BASE_URL}/api/posts`, { ...productData, meta })
+      await axios.post(`${API_BASE_URL}/api/posts`, { ...productData, meta }, { headers: getAuthHeaders() })
     }
 
     await loadProducts()
@@ -199,7 +211,7 @@ async function deleteProduct(productId) {
   if (!confirm('Are you sure you want to delete this product?')) return
 
   try {
-    await axios.delete(`${API_BASE_URL}/api/posts/${productId}`)
+    await axios.delete(`${API_BASE_URL}/api/posts/${productId}`, { headers: getAuthHeaders() })
     await loadProducts()
     alert('Product deleted!')
   } catch (err) {
@@ -252,8 +264,18 @@ function cancelProductEdit() {
           <input v-model="form.squareApplicationId" type="text" class="w-full border rounded px-3 py-2" placeholder="sq0idp-...">
         </div>
         <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1">Application Secret</label>
+          <input v-model="form.squareApplicationSecret" type="password" class="w-full border rounded px-3 py-2" placeholder="sq0csp-...">
+        </div>
+      </div>
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div>
           <label class="block text-sm font-medium text-gray-700 mb-1">Access Token</label>
           <input v-model="form.squareAccessToken" type="password" class="w-full border rounded px-3 py-2" placeholder="EAAA...">
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1">Location ID (optional)</label>
+          <input v-model="form.squareLocationId" type="text" class="w-full border rounded px-3 py-2" placeholder="Location ID">
         </div>
       </div>
 

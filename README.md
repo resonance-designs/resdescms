@@ -1,5 +1,5 @@
 # ResDesCMS
-Version: **alpha** | Latest release: v0.2.3
+Version: **alpha** | Latest release: v0.2.4
 
 ## About
 A modern, full-featured CMS built with Vue 3 + Vite, Express.js, and SQLite.

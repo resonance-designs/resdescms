@@ -7,6 +7,29 @@ import * as db from '../db.js'
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 export const pluginsRoot = path.join(__dirname, '..', 'plugins')
 
+function validateSlug(slug) {
+  if (!slug || typeof slug !== 'string') {
+    throw new Error('Invalid slug: must be a non-empty string')
+  }
+
+  // Reject slugs that could cause path traversal
+  if (slug.includes('..') || slug.includes('./') || slug.includes('\\') || slug.includes('/')) {
+    throw new Error('Invalid slug: contains path traversal characters')
+  }
+
+  // Only allow alphanumeric characters, hyphens, and underscores
+  if (!/^[a-zA-Z0-9_-]+$/.test(slug)) {
+    throw new Error('Invalid slug: contains invalid characters')
+  }
+
+  // Reasonable length limit
+  if (slug.length > 100) {
+    throw new Error('Invalid slug: too long')
+  }
+
+  return slug
+}
+
 async function ensureDir(dirPath) {
   await fs.promises.mkdir(dirPath, { recursive: true })
 }
@@ -108,17 +131,19 @@ async function runUninstallScript(pluginDir) {
 }
 
 export async function activatePlugin(slug) {
+  validateSlug(slug)
   const existing = await db.get('SELECT * FROM rdcms_plugins WHERE slug = ?', [slug])
   if (!existing) {
     throw new Error('Plugin not found')
   }
-  await db.run('UPDATE rdcms_plugins SET is_active = 1 WHERE slug = ?', [slug])
   const pluginDir = path.join(pluginsRoot, slug)
   await runInstallScript(pluginDir)
+  await db.run('UPDATE rdcms_plugins SET is_active = 1 WHERE slug = ?', [slug])
   return hydratePlugin({ ...existing, is_active: 1 })
 }
 
 export async function deactivatePlugin(slug) {
+  validateSlug(slug)
   const existing = await db.get('SELECT * FROM rdcms_plugins WHERE slug = ?', [slug])
   if (!existing) throw new Error('Plugin not found')
   await db.run('UPDATE rdcms_plugins SET is_active = 0 WHERE slug = ?', [slug])
@@ -126,6 +151,7 @@ export async function deactivatePlugin(slug) {
 }
 
 export async function savePluginSettings(slug, settings) {
+  validateSlug(slug)
   const row = await db.get('SELECT * FROM rdcms_plugins WHERE slug = ?', [slug])
   if (!row) throw new Error('Plugin not found')
   await db.run('UPDATE rdcms_plugins SET settings = ? WHERE slug = ?', [JSON.stringify(settings), slug])
@@ -194,6 +220,14 @@ export async function installPluginFromZip(zipPath) {
     throw new Error('Cannot install plugin: functions.js or plugin.json with a slug is required.')
   }
 
+  // Validate the slug to prevent path traversal attacks
+  try {
+    validateSlug(manifest.slug)
+  } catch (err) {
+    await fs.promises.rm(tempDir, { recursive: true, force: true })
+    throw new Error('Cannot install plugin: ' + err.message)
+  }
+
   const targetDir = path.join(pluginsRoot, manifest.slug)
   await fs.promises.rm(targetDir, { recursive: true, force: true })
   await ensureDir(targetDir)
@@ -206,9 +240,17 @@ export async function installPluginFromZip(zipPath) {
 }
 
 export async function deletePlugin(slug, { deleteFiles = false, deleteData = false } = {}) {
+  validateSlug(slug)
   const existing = await db.get('SELECT * FROM rdcms_plugins WHERE slug = ?', [slug])
   if (!existing) throw new Error('Plugin not found')
   const pluginDir = path.join(pluginsRoot, slug)
+
+  // Additional security: verify the resolved path is within pluginsRoot
+  const resolvedPluginDir = path.resolve(pluginDir)
+  const resolvedPluginsRoot = path.resolve(pluginsRoot)
+  if (!resolvedPluginDir.startsWith(resolvedPluginsRoot)) {
+    throw new Error('Invalid plugin path: path traversal detected')
+  }
 
   // deactivate first
   await db.run('UPDATE rdcms_plugins SET is_active = 0 WHERE slug = ?', [slug])

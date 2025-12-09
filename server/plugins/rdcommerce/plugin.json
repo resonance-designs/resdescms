@@ -10,6 +10,7 @@
   "adminView": "/server/plugins/rdcommerce/admin/RDCommerce.vue",
   "defaultSettings": {
     "squareApplicationId": "",
+    "squareApplicationSecret": "",
     "squareAccessToken": "",
     "squareLocationId": "",
     "squareSandbox": true,

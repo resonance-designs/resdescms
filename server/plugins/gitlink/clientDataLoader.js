@@ -4,7 +4,7 @@ const API_BASE_URL = (import.meta.env.VITE_API_BASE || 'http://localhost:3001').
 
 export async function loadContentData(content, layoutJson, { pluginData }) {
   const body = content || ''
-  const layout = layoutJson || ''
+  const layout = typeof layoutJson === 'string' ? layoutJson : JSON.stringify(layoutJson || {})
   const hasGithubReposElement = layout.includes('"type":"github-repos"')
   const hasGitlinkShortcode = /\[gitlink\b/i.test(body)
 

@@ -253,27 +253,8 @@ function migrateLegacyTables() {
 }
 
 function addMissingColumns() {
-  const addColumnIfMissing = (table, column, definition) => {
-    db.get(`SELECT name FROM sqlite_master WHERE type='table' AND name='${table}'`, (err, exists) => {
-      if (err || !exists) return
-      db.all(`PRAGMA table_info(${table})`, (infoErr, columns) => {
-        if (infoErr) return
-        const existsCol = columns.some(col => col.name === column)
-        if (!existsCol) {
-          db.run(`ALTER TABLE ${table} ADD COLUMN ${definition}`, alterErr => {
-            if (alterErr) console.error(`Error adding column ${column} to ${table}:`, alterErr)
-          })
-        }
-      })
-    })
-  }
-
-  addColumnIfMissing('rdcms_glink_tokens', 'access_token', 'access_token TEXT')
-  addColumnIfMissing('rdcms_glink_tokens', 'refresh_token', 'refresh_token TEXT')
-  addColumnIfMissing('rdcms_glink_tokens', 'scope', 'scope TEXT')
-  addColumnIfMissing('rdcms_glink_tokens', 'token_expiry', 'token_expiry INTEGER')
-  addColumnIfMissing('rdcms_glink_tokens', 'account_email', 'account_email TEXT')
-  addColumnIfMissing('rdcms_glink_tokens', 'account_id', 'account_id TEXT')
+  // Plugin-specific table modifications are now handled by each plugin's install.js
+  // This ensures plugins are truly self-contained
 }
 
 function seedDefaults() {

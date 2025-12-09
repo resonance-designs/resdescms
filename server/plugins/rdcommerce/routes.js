@@ -7,8 +7,18 @@ const router = express.Router()
 const FRONTEND_URL = process.env.FRONTEND_URL || 'http://localhost:5173'
 const API_BASE_URL = process.env.API_BASE_URL || 'http://localhost:3001'
 const SQUARE_APPLICATION_ID = process.env.RDCOMMERCE_SQUARE_APP_ID
+const SQUARE_APPLICATION_SECRET = process.env.RDCOMMERCE_SQUARE_APP_SECRET
 const SQUARE_ACCESS_TOKEN = process.env.RDCOMMERCE_SQUARE_ACCESS_TOKEN
 const stateStore = new Map()
+const STATE_TTL_MS = 10 * 60 * 1000 // 10 minutes
+
+// Clean up expired states periodically
+setInterval(() => {
+  const now = Date.now()
+  for (const [state, timestamp] of stateStore) {
+    if (now - timestamp > STATE_TTL_MS) stateStore.delete(state)
+  }
+}, 60 * 1000) // Clean every minute
 
 // Square OAuth configuration
 const SQUARE_SCOPES = ['ITEMS_READ', 'INVENTORY_READ', 'MERCHANT_PROFILE_READ']
@@ -125,10 +135,11 @@ router.get('/square/callback', async (req, res) => {
 
     const settings = await getSettings()
     const appId = (SQUARE_APPLICATION_ID || settings.squareApplicationId || '').trim()
+    const appSecret = (SQUARE_APPLICATION_SECRET || settings.squareApplicationSecret || '').trim()
     const accessToken = (SQUARE_ACCESS_TOKEN || settings.squareAccessToken || '').trim()
 
-    if (!appId || !accessToken) {
-      console.log('Square not configured:', { appId: !!appId, accessToken: !!accessToken })
+    if (!appId || !appSecret) {
+      console.log('Square not configured:', { appId: !!appId, appSecret: !!appSecret })
       return res.status(400).send('Square not configured')
     }
 
@@ -137,7 +148,7 @@ router.get('/square/callback', async (req, res) => {
     console.log('Exchanging code for token with baseUrl:', baseUrl)
     const tokenRes = await axios.post(`${baseUrl}/oauth2/token`, {
       client_id: appId,
-      client_secret: accessToken,
+      client_secret: appSecret,
       code,
       grant_type: 'authorization_code'
     })
@@ -188,7 +199,7 @@ router.get('/square/status', async (req, res) => {
     res.json({
       connected: !!token,
       account_name: token?.account_name || null,
-      hasConfig: !!(settings.squareApplicationId && settings.squareAccessToken),
+      hasConfig: !!(settings.squareApplicationId && settings.squareApplicationSecret),
       sandbox: isSandbox
     })
   } catch (err) {

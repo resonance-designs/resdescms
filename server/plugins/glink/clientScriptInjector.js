@@ -44,6 +44,7 @@ export function injectClientScripts(plugin, { includeAdmin = false } = {}) {
     injectedGaId = gaId
   }
   if (headSnippet) {
+    // WARNING: headSnippet is injected as-is. Only admin-configured values should reach here.
     const existingSnippet = document.querySelector('script[data-glink-head-snippet="1"]')
     if (!existingSnippet) {
       const snippet = document.createElement('script')

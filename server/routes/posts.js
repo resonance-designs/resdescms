@@ -76,13 +76,18 @@ router.post('/', authenticateToken, async (req, res) => {
     )
 
     if (meta && typeof meta === 'object') {
-      await db.run('DELETE FROM rdcms_postmeta WHERE post_id = ?', [result.lastID])
-      for (const [key, value] of Object.entries(meta)) {
-        await db.run('INSERT INTO rdcms_postmeta (post_id, meta_key, meta_value) VALUES (?, ?, ?)', [
-          result.lastID,
-          key,
-          value
-        ])
+      await db.run('BEGIN TRANSACTION')
+      try {
+        await db.run('DELETE FROM rdcms_postmeta WHERE post_id = ?', [result.lastID])
+        for (const [key, value] of Object.entries(meta)) {
+          await db.run('INSERT INTO rdcms_postmeta (post_id, meta_key, meta_value) VALUES (?, ?, ?)', [
+            result.lastID, key, value
+          ])
+        }
+        await db.run('COMMIT')
+      } catch (err) {
+        await db.run('ROLLBACK')
+        throw err
       }
     }
 
@@ -107,13 +112,18 @@ router.put('/:id', authenticateToken, async (req, res) => {
     )
 
     if (meta && typeof meta === 'object') {
-      await db.run('DELETE FROM rdcms_postmeta WHERE post_id = ?', [req.params.id])
-      for (const [key, value] of Object.entries(meta)) {
-        await db.run('INSERT INTO rdcms_postmeta (post_id, meta_key, meta_value) VALUES (?, ?, ?)', [
-          req.params.id,
-          key,
-          value
-        ])
+      await db.run('BEGIN TRANSACTION')
+      try {
+        await db.run('DELETE FROM rdcms_postmeta WHERE post_id = ?', [req.params.id])
+        for (const [key, value] of Object.entries(meta)) {
+          await db.run('INSERT INTO rdcms_postmeta (post_id, meta_key, meta_value) VALUES (?, ?, ?)', [
+            req.params.id, key, value
+          ])
+        }
+        await db.run('COMMIT')
+      } catch (err) {
+        await db.run('ROLLBACK')
+        throw err
       }
     }
 

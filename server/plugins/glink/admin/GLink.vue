@@ -224,7 +224,7 @@ async function createProperty() {
       </div>
       <div>
         <label class="block text-sm font-medium text-gray-700 mb-1">Google OAuth Client Secret</label>
-        <input v-model="form.clientSecret" type="text" class="w-full border rounded px-3 py-2" placeholder="********">
+        <input v-model="form.clientSecret" type="password" class="w-full border rounded px-3 py-2" placeholder="********">
       </div>
       <div class="md:col-span-2">
         <label class="block text-sm font-medium text-gray-700 mb-1">Redirect URI (copy into Google console)</label>

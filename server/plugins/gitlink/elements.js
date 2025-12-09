@@ -1,5 +1,14 @@
 import { h } from 'vue'
 
+function isValidUrl(url) {
+  try {
+    const parsed = new URL(url)
+    return ['http:', 'https:'].includes(parsed.protocol)
+  } catch {
+    return false
+  }
+}
+
 export function renderGitHubRepos(el, pluginStore) {
   const mode = el.data?.mode === 'medium-list' ? 'medium-list' : 'small-list'
   const list = pluginStore.pluginData?.gitlink?.gitRepos || []
@@ -15,7 +24,7 @@ export function renderGitHubRepos(el, pluginStore) {
         h('div', { class: 'border rounded p-3' }, [
           h(
             'a',
-            { href: repo.html_url, target: '_blank', rel: 'noopener', class: 'font-semibold text-rd-orange hover:underline' },
+            { href: isValidUrl(repo.html_url) ? repo.html_url : '#', target: '_blank', rel: 'noopener', class: 'font-semibold text-rd-orange hover:underline' },
             repo.full_name || repo.name
           ),
           repo.description ? h('p', { class: 'text-sm text-gray-700 mt-1' }, repo.description) : null,
@@ -31,7 +40,7 @@ export function renderGitHubRepos(el, pluginStore) {
       h('li', {}, [
         h(
           'a',
-          { href: repo.html_url, target: '_blank', rel: 'noopener', class: 'text-rd-orange hover:underline' },
+          { href: isValidUrl(repo.html_url) ? repo.html_url : '#', target: '_blank', rel: 'noopener', class: 'text-rd-orange hover:underline' },
           repo.full_name || repo.name
         ),
         h('span', { class: 'text-gray-500 ml-1' }, `★ ${repo.stargazers_count || 0}`)
