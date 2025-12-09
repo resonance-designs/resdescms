@@ -62,47 +62,13 @@ export default {
 
           return h('nav', { class: classes }, links.length ? links : [h('span', { class: 'text-gray-400 text-sm' }, 'No menu items found')])
         }
-        case 'github-repos': {
-          const mode = el.data?.mode === 'medium-list' ? 'medium-list' : 'small-list'
-          const list = pluginStore.gitRepos || []
-          if (!list.length) {
-            return h('div', { class: 'text-gray-500 text-sm' }, 'No repositories available')
+        default: {
+          const pluginRenderer = pluginStore.elementRenderers?.[el.type]
+          if (pluginRenderer?.render && typeof pluginRenderer.render === 'function') {
+            return pluginRenderer.render(el, pluginStore)
           }
-          const items = list.slice(0, 10)
-          if (mode === 'medium-list') {
-            return h(
-              'div',
-              { class: 'space-y-3' },
-              items.map(repo =>
-                h('div', { class: 'border rounded p-3' }, [
-                  h(
-                    'a',
-                    { href: repo.html_url, target: '_blank', rel: 'noopener', class: 'font-semibold text-rd-orange hover:underline' },
-                    repo.full_name || repo.name
-                  ),
-                  repo.description ? h('p', { class: 'text-sm text-gray-700 mt-1' }, repo.description) : null,
-                  h('p', { class: 'text-xs text-gray-500 mt-1' }, `★ ${repo.stargazers_count || 0} • Forks ${repo.forks_count || 0}`)
-                ])
-              )
-            )
-          }
-          return h(
-            'ul',
-            { class: 'space-y-1 text-sm' },
-            items.map(repo =>
-              h('li', {}, [
-                h(
-                  'a',
-                  { href: repo.html_url, target: '_blank', rel: 'noopener', class: 'text-rd-orange hover:underline' },
-                  repo.full_name || repo.name
-                ),
-                h('span', { class: 'text-gray-500 ml-1' }, `★ ${repo.stargazers_count || 0}`)
-              ])
-            )
-          )
-        }
-        default:
           return h('div', { class: 'text-xs text-gray-500' }, `Unsupported element: ${el.type}`)
+        }
       }
     }
   }

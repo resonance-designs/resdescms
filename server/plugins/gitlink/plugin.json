@@ -8,6 +8,11 @@
   ],
   "serverRoutes": "routes.js",
   "adminView": "/server/plugins/gitlink/admin/GitLink.vue",
+  "shortcodeHandler": "/server/plugins/gitlink/shortcodes.js",
+  "clientDataLoader": "/server/plugins/gitlink/clientDataLoader.js",
+  "elements": [
+    { "type": "github-repos", "label": "GitHub Repos", "defaults": { "mode": "small-list" } }
+  ],
   "defaultSettings": {
     "clientId": "",
     "clientSecret": "",

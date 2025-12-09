@@ -36,11 +36,7 @@ async function loadPage(slug) {
   if (!pluginStore.plugins.length) {
     await pluginStore.fetchPlugins()
   }
-  const layoutJson = page.value?.layout_json || ''
-  const hasGitBlock = layoutJson.includes('"type":"github-repos"')
-  if (/\[(gitlink)\b/i.test(body) || hasGitBlock) {
-    pluginStore.gitRepos = await pluginStore.fetchGitRepos()
-  }
+  await pluginStore.loadContentData(page.value?.content, page.value?.layout_json)
   pluginStore.injectClientScripts()
   await themeStore.loadActiveTheme()
 }
@@ -71,7 +67,8 @@ const renderedContent = computed(() =>
     posts: contentStore.posts,
     pages: contentStore.pages,
     media: contentStore.media,
-    gitRepos: pluginStore.gitRepos || []
+    ...pluginStore.getShortcodeContext(),
+    pluginHandlers: pluginStore.shortcodeHandlers
   })
 )
 

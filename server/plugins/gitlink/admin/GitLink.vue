@@ -81,7 +81,8 @@ async function loadRepos() {
   try {
     const { data } = await axios.get(`${API_BASE_URL}/api/plugins/gitlink/repos`)
     repos.value = data || []
-    pluginStore.gitRepos = repos.value
+    if (!pluginStore.pluginData.gitlink) pluginStore.pluginData.gitlink = {}
+    pluginStore.pluginData.gitlink.gitRepos = repos.value
   } catch (err) {
     alert('Failed to load repositories')
   }

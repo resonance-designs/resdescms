@@ -1,8 +1,12 @@
 # Changelog
 
+## v0.2.2 (alpha)
+-   Plugin system enhanced: GitLink plugin made fully self-contained with generic plugin data loading and shortcode context interfaces. No hardcoded plugin references in core application code.
+
 ## v0.2.1 (alpha)
 -   Plugin added: GitLink (GitHub Linking); OAuth configurable from the admin UI (Client ID/Secret/redirect).
 -   Plugin admin UIs load from plugin manifests (`adminView`), keeping plugin frontends (e.g., GLink/GitLink) inside each plugin directory. GLink now supports optional admin tracking toggle and testing mode for GA tags.
+-   Plugin elements/shortcodes now come from plugin manifests (e.g., GitLink registers the “GitHub Repos” block and `[gitlink]` shortcode).
 
 ## v0.2.0 (alpha)
 
