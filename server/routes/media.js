@@ -30,7 +30,7 @@ const router = express.Router()
 
 router.get('/', async (req, res) => {
   try {
-    const media = await db.all('SELECT * FROM media ORDER BY created_at DESC')
+    const media = await db.all('SELECT * FROM rdcms_media ORDER BY created_at DESC')
     res.json(media)
   } catch (error) {
     res.status(500).json({ error: error.message })
@@ -44,7 +44,7 @@ router.post('/upload', authenticateToken, upload.single('file'), async (req, res
     }
 
     const result = await db.run(
-      'INSERT INTO media (filename, url, mime_type, size) VALUES (?, ?, ?, ?)',
+      'INSERT INTO rdcms_media (filename, url, mime_type, size) VALUES (?, ?, ?, ?)',
       [
         req.file.filename,
         `/uploads/${req.file.filename}`,
@@ -62,7 +62,7 @@ router.post('/upload', authenticateToken, upload.single('file'), async (req, res
 
 router.delete('/:id', authenticateToken, async (req, res) => {
   try {
-    const media = await db.get('SELECT * FROM media WHERE id = ?', [req.params.id])
+    const media = await db.get('SELECT * FROM rdcms_media WHERE id = ?', [req.params.id])
     if (!media) return res.status(404).json({ error: 'Media not found' })
 
     const filePath = path.join(uploadsDir, media.filename)
@@ -70,7 +70,7 @@ router.delete('/:id', authenticateToken, async (req, res) => {
       fs.unlinkSync(filePath)
     }
 
-    await db.run('DELETE FROM media WHERE id = ?', [req.params.id])
+    await db.run('DELETE FROM rdcms_media WHERE id = ?', [req.params.id])
     res.json({ success: true })
   } catch (error) {
     res.status(500).json({ error: error.message })

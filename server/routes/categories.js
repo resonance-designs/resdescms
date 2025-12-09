@@ -7,7 +7,7 @@ const router = express.Router()
 router.get('/:type', async (req, res) => {
   try {
     const { type } = req.params
-    const categories = await db.all('SELECT * FROM categories WHERE type = ? ORDER BY name ASC', [type])
+    const categories = await db.all('SELECT * FROM rdcms_categories WHERE type = ? ORDER BY name ASC', [type])
     res.json(categories)
   } catch (error) {
     res.status(500).json({ error: error.message })
@@ -16,7 +16,7 @@ router.get('/:type', async (req, res) => {
 
 router.get('/', async (req, res) => {
   try {
-    const categories = await db.all('SELECT * FROM categories ORDER BY type ASC, name ASC')
+    const categories = await db.all('SELECT * FROM rdcms_categories ORDER BY type ASC, name ASC')
     res.json(categories)
   } catch (error) {
     res.status(500).json({ error: error.message })
@@ -32,11 +32,11 @@ router.post('/', authenticateToken, async (req, res) => {
     }
 
     const result = await db.run(
-      'INSERT INTO categories (name, slug, description, type) VALUES (?, ?, ?, ?)',
+      'INSERT INTO rdcms_categories (name, slug, description, type) VALUES (?, ?, ?, ?)',
       [name, slug, description, type]
     )
 
-    const category = await db.get('SELECT * FROM categories WHERE id = ?', [result.lastID])
+    const category = await db.get('SELECT * FROM rdcms_categories WHERE id = ?', [result.lastID])
     res.json(category)
   } catch (error) {
     res.status(500).json({ error: error.message })
@@ -48,11 +48,11 @@ router.put('/:id', authenticateToken, async (req, res) => {
     const { name, slug, description, type } = req.body
 
     await db.run(
-      'UPDATE categories SET name = ?, slug = ?, description = ?, type = ? WHERE id = ?',
+      'UPDATE rdcms_categories SET name = ?, slug = ?, description = ?, type = ? WHERE id = ?',
       [name, slug, description, type, req.params.id]
     )
 
-    const category = await db.get('SELECT * FROM categories WHERE id = ?', [req.params.id])
+    const category = await db.get('SELECT * FROM rdcms_categories WHERE id = ?', [req.params.id])
     res.json(category)
   } catch (error) {
     res.status(500).json({ error: error.message })
@@ -61,7 +61,7 @@ router.put('/:id', authenticateToken, async (req, res) => {
 
 router.delete('/:id', authenticateToken, async (req, res) => {
   try {
-    await db.run('DELETE FROM categories WHERE id = ?', [req.params.id])
+    await db.run('DELETE FROM rdcms_categories WHERE id = ?', [req.params.id])
     res.json({ success: true })
   } catch (error) {
     res.status(500).json({ error: error.message })

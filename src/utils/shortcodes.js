@@ -1,15 +1,7 @@
 import { resolveMediaUrl } from './media'
+import { escapeHtml } from '../../server/utils/shortcodeUtils.js'
 
-const SHORTCODE_REGEX = /\[(post|page|media)([^\]]*)\]/gi
-
-function escapeHtml(str) {
-  return (str || '')
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;')
-    .replace(/'/g, '&#39;')
-}
+const SHORTCODE_REGEX = /\[(post|page|media|[a-z0-9_-]+)([^\]]*)\]/gi
 
 function parseAttrs(attrString) {
   const attrs = {}
@@ -75,7 +67,7 @@ function renderMedia(media, attrs) {
   return `<img src="${resolveMediaUrl(media.url)}"${width} alt="${alt}" class="rounded">`
 }
 
-export function replaceShortcodes(content, { posts = [], pages = [], media = [] } = {}) {
+export function replaceShortcodes(content, { posts = [], pages = [], media = [], pluginHandlers = {}, ...pluginContext } = {}) {
   if (!content || typeof content !== 'string') return content || ''
 
   return content.replace(SHORTCODE_REGEX, (_, type, attrString) => {
@@ -97,6 +89,14 @@ export function replaceShortcodes(content, { posts = [], pages = [], media = [] 
         return renderMedia(item, attrs)
       }
       default:
+        if (pluginHandlers[type]) {
+          try {
+            return pluginHandlers[type](attrs, { posts, pages, media, ...pluginContext }) || _
+          } catch (e) {
+            console.error('Plugin shortcode handler error', type, e)
+            return _
+          }
+        }
         return _
     }
   })

@@ -2,6 +2,7 @@
 import { h } from 'vue'
 import { RouterLink } from 'vue-router'
 import { useContentStore } from '../stores/content'
+import { usePluginStore } from '../stores/plugins'
 import { resolveMediaUrl } from '../utils/media'
 
 export default {
@@ -11,6 +12,7 @@ export default {
   },
   setup(props) {
     const contentStore = useContentStore()
+    const pluginStore = usePluginStore()
 
     return () => {
       const el = props.element || {}
@@ -60,8 +62,13 @@ export default {
 
           return h('nav', { class: classes }, links.length ? links : [h('span', { class: 'text-gray-400 text-sm' }, 'No menu items found')])
         }
-        default:
+        default: {
+          const pluginRenderer = pluginStore.elementRenderers?.[el.type]
+          if (pluginRenderer?.render && typeof pluginRenderer.render === 'function') {
+            return pluginRenderer.render(el, pluginStore)
+          }
           return h('div', { class: 'text-xs text-gray-500' }, `Unsupported element: ${el.type}`)
+        }
       }
     }
   }

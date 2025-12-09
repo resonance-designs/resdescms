@@ -14,7 +14,7 @@ router.post('/login', async (req, res) => {
       return res.status(400).json({ error: 'Username and password required' })
     }
 
-    const user = await db.get('SELECT * FROM users WHERE username = ?', [username])
+    const user = await db.get('SELECT * FROM rdcms_users WHERE username = ?', [username])
 
     if (!user || !bcryptjs.compareSync(password, user.password)) {
       return res.status(401).json({ error: 'Invalid credentials' })

@@ -94,6 +94,25 @@ Restart `npm run dev` after setting this so media URLs and API calls resolve cor
 -   Themes: `/api/themes`, `/api/themes/active`, `/api/themes/upload`
 -   Design settings: `/api/design`
 
+## Plugins (GLink, GitLink)
+
+Plugins can be uploaded/activated in **Admin -> Plugins**. Each plugin mounts its own API routes from `server/plugins/<slug>/routes.js` and only exposes admin menu links when active.
+
+**GLink (bundled)** connects Google Analytics/AdSense:
+1. Go to **Admin -> GLink** (visible when the GLink plugin is active).
+2. In Google Cloud Console, create an OAuth Client (Web application) and add the redirect URI shown in the UI (defaults to `http://localhost:3001/api/plugins/glink/callback`).
+3. Enable the Google Analytics Admin/Data API and Analytics Admin scopes.
+4. Paste the Client ID and Client Secret into the GLink UI, save, then click **Connect to Google**.
+5. After consent, choose an Analytics account/property/stream in the UI and save to inject the GA4 tag. Testing mode sets `cookie_domain` to `none` for the tag. Enable “Track Admin Usage” if you want GA injected on admin routes.
+Optional env vars: `GLINK_CLIENT_ID`, `GLINK_CLIENT_SECRET`, `GLINK_REDIRECT_URI`.
+
+**GitLink (bundled)** connects a GitHub account:
+1. Go to **Admin -> GitLink** (visible when the GitLink plugin is active).
+2. Create a GitHub OAuth app; set the redirect URI to `http://localhost:3001/api/plugins/gitlink/callback` (or your host).
+3. Paste Client ID/Secret into the GitLink UI, save, then click **Connect GitHub**.
+4. After consent, refresh repos. Use `[gitlink mode="small-list|medium-list"]` shortcode or the “GitHub Repos” block element to display repos.
+Optional env vars: `GITLINK_CLIENT_ID`, `GITLINK_CLIENT_SECRET`, `GITLINK_REDIRECT_URI`.
+
 ## Environment Variables
 
 Create `.env` (backend):

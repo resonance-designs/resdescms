@@ -7,7 +7,7 @@ const router = express.Router()
 
 router.get('/', authenticateToken, async (req, res) => {
   try {
-    const users = await db.all('SELECT id, username, email, created_at FROM users')
+    const users = await db.all('SELECT id, username, email, created_at FROM rdcms_users')
     res.json(users)
   } catch (error) {
     console.error('Error fetching users:', error)
@@ -17,7 +17,7 @@ router.get('/', authenticateToken, async (req, res) => {
 
 router.get('/:id', authenticateToken, async (req, res) => {
   try {
-    const user = await db.get('SELECT id, username, email, created_at FROM users WHERE id = ?', [req.params.id])
+    const user = await db.get('SELECT id, username, email, created_at FROM rdcms_users WHERE id = ?', [req.params.id])
     if (!user) {
       return res.status(404).json({ error: 'User not found' })
     }
@@ -39,7 +39,7 @@ router.post('/', authenticateToken, async (req, res) => {
     const hashedPassword = bcryptjs.hashSync(password, 10)
     
     const result = await db.run(
-      'INSERT INTO users (username, email, password) VALUES (?, ?, ?)',
+      'INSERT INTO rdcms_users (username, email, password) VALUES (?, ?, ?)',
       [username, email || null, hashedPassword]
     )
 
@@ -67,7 +67,7 @@ router.put('/:id', authenticateToken, async (req, res) => {
       return res.status(400).json({ error: 'Username is required' })
     }
 
-    let updateQuery = 'UPDATE users SET username = ?, email = ?'
+    let updateQuery = 'UPDATE rdcms_users SET username = ?, email = ?'
     let params = [username, email || null, parseInt(req.params.id)]
 
     if (password) {
@@ -80,7 +80,7 @@ router.put('/:id', authenticateToken, async (req, res) => {
 
     await db.run(updateQuery, params)
 
-    const user = await db.get('SELECT id, username, email, created_at FROM users WHERE id = ?', [req.params.id])
+    const user = await db.get('SELECT id, username, email, created_at FROM rdcms_users WHERE id = ?', [req.params.id])
     res.json(user)
   } catch (error) {
     console.error('Error updating user:', error)
@@ -98,7 +98,7 @@ router.delete('/:id', authenticateToken, async (req, res) => {
       return res.status(400).json({ error: 'Cannot delete your own user account' })
     }
 
-    await db.run('DELETE FROM users WHERE id = ?', [req.params.id])
+    await db.run('DELETE FROM rdcms_users WHERE id = ?', [req.params.id])
     res.json({ success: true })
   } catch (error) {
     console.error('Error deleting user:', error)

@@ -4,12 +4,14 @@ import { useRoute } from 'vue-router'
 import { useContentStore } from '../stores/content'
 import { useThemeStore } from '../stores/theme'
 import { resolveMediaUrl } from '../utils/media'
+import { usePluginStore } from '../stores/plugins'
 import { replaceShortcodes } from '../utils/shortcodes'
 import ElementRenderer from '../components/ElementRenderer.vue'
 
 const route = useRoute()
 const contentStore = useContentStore()
 const themeStore = useThemeStore()
+const pluginStore = usePluginStore()
 const page = ref(null)
 
 async function loadPage(slug) {
@@ -31,6 +33,11 @@ async function loadPage(slug) {
   if (!contentStore.navigationMenus.length) {
     await contentStore.fetchNavigationMenus()
   }
+  if (!pluginStore.plugins.length) {
+    await pluginStore.fetchPlugins()
+  }
+  await pluginStore.loadContentData(page.value?.content, page.value?.layout_json)
+  pluginStore.injectClientScripts()
   await themeStore.loadActiveTheme()
 }
 
@@ -59,7 +66,9 @@ const renderedContent = computed(() =>
   replaceShortcodes(page.value?.content || '', {
     posts: contentStore.posts,
     pages: contentStore.pages,
-    media: contentStore.media
+    media: contentStore.media,
+    ...pluginStore.getShortcodeContext(),
+    pluginHandlers: pluginStore.shortcodeHandlers
   })
 )
 

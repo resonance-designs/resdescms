@@ -1,0 +1,26 @@
+{
+  "slug": "glink",
+  "name": "GLink",
+  "version": "1.0.0",
+  "description": "Connect Google Analytics / AdSense via a guided wizard.",
+  "adminMenu": [
+    { "path": "/admin/glink", "label": "GLink" }
+  ],
+  "serverRoutes": "routes.js",
+  "adminView": "/server/plugins/glink/admin/GLink.vue",
+  "clientScriptInjector": "/server/plugins/glink/clientScriptInjector.js",
+  "defaultSettings": {
+    "gaId": "",
+    "adsenseClient": "",
+    "gaAccountId": "",
+    "gaAccountName": "",
+    "gaPropertyId": "",
+    "gaPropertyName": "",
+    "headSnippet": "",
+    "clientId": "",
+    "clientSecret": "",
+    "redirectUri": "http://localhost:3001/api/plugins/glink/callback",
+    "testing": false,
+    "trackAdmin": false
+  }
+}

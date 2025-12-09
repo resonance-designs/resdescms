@@ -1,0 +1,24 @@
+{
+  "slug": "rdcommerce",
+  "name": "RDCommerce",
+  "version": "1.0.0",
+  "description": "Ecommerce plugin with integrations for Square, Stripe, Shopify, and PayPal. Import products from Square.",
+  "adminMenu": [
+    { "path": "/admin/rdcommerce", "label": "RDCommerce" }
+  ],
+  "serverRoutes": "routes.js",
+  "adminView": "/server/plugins/rdcommerce/admin/RDCommerce.vue",
+  "defaultSettings": {
+    "squareApplicationId": "",
+    "squareAccessToken": "",
+    "squareLocationId": "",
+    "squareSandbox": true,
+    "stripePublishableKey": "",
+    "stripeSecretKey": "",
+    "shopifyStoreDomain": "",
+    "shopifyAccessToken": "",
+    "paypalClientId": "",
+    "paypalClientSecret": "",
+    "selectedProvider": "square"
+  }
+}

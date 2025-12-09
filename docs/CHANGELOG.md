@@ -1,9 +1,28 @@
 # Changelog
 
+## v0.2.3 (alpha)
+-   Plugin added: RDCommerce (Ecommerce Integration); Complete Square payment processor integration with OAuth authentication, inventory import with date/stock filters, and full product management interface. Supports sandbox/production modes with developer toggle. Products stored as posts with metadata (SKU, price, stock, Square ID). Self-contained plugin with no core CMS modifications.
+
+## v0.2.2 (alpha)
+-   Plugin system enhanced: GitLink and GLink plugins made fully self-contained with generic plugin data loading, shortcode context, and client script injection interfaces. No hardcoded plugin references in core application code.
+
+## v0.2.1 (alpha)
+-   Plugin added: GitLink (GitHub Linking); OAuth configurable from the admin UI (Client ID/Secret/redirect).
+-   Plugin admin UIs load from plugin manifests (`adminView`), keeping plugin frontends (e.g., GLink/GitLink) inside each plugin directory. GLink now supports optional admin tracking toggle and testing mode for GA tags.
+-   Plugin elements/shortcodes now come from plugin manifests (e.g., GitLink registers the “GitHub Repos” block and `[gitlink]` shortcode).
+
+## v0.2.0 (alpha)
+
+-   Plugin architecture mounts plugin routes from `server/plugins/<slug>/routes.js`; admin menus render only when the plugin is active (no plugin code in core). Multiple plugins can be active simultaneously.
+-   Plugin system shipped with GLink (Google Analytics/AdSense); OAuth configurable from the admin UI (Client ID/Secret/redirect) with account/property selection. Account/property/stream picker, testing-mode GA tag injection.
+-   Plugin admin: deactivate hides routes/menus; delete supports removing files and (optionally) data via confirm modal.
+
 ## v0.1.4 (alpha)
 
 -   Added WordPress-style shortcodes for posts/pages/media in content (post/page `target` option for link display).
 -   Documentation moved to `/docs` with updated links and architecture diagram cleanup.
+-   Database refactor: all tables now prefixed with `rdcms_`, posts get `post_type`, and new `rdcms_postmeta` supports extensible content metadata.
+
 
 ## v0.1.3 (alpha)
 

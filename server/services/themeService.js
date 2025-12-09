@@ -68,7 +68,7 @@ export async function hydrateTheme(row) {
 
 export async function ensureThemeTable() {
   await db.run(`
-    CREATE TABLE IF NOT EXISTS themes (
+    CREATE TABLE IF NOT EXISTS rdcms_themes (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       slug TEXT UNIQUE NOT NULL,
       name TEXT,
@@ -84,7 +84,7 @@ export async function ensureThemeTable() {
 }
 
 export async function listThemes() {
-  const rows = await db.all('SELECT * FROM themes')
+  const rows = await db.all('SELECT * FROM rdcms_themes')
   const hydrated = []
   for (const row of rows) {
     const theme = await hydrateTheme(row)
@@ -94,24 +94,24 @@ export async function listThemes() {
 }
 
 export async function getActiveTheme() {
-  const row = await db.get('SELECT * FROM themes WHERE is_active = 1 LIMIT 1')
+  const row = await db.get('SELECT * FROM rdcms_themes WHERE is_active = 1 LIMIT 1')
   return hydrateTheme(row)
 }
 
 export async function setActiveTheme(slug) {
-  const existing = await db.get('SELECT * FROM themes WHERE slug = ?', [slug])
+  const existing = await db.get('SELECT * FROM rdcms_themes WHERE slug = ?', [slug])
   if (!existing) {
     throw new Error('Theme not found')
   }
-  await db.run('UPDATE themes SET is_active = 0')
-  await db.run('UPDATE themes SET is_active = 1 WHERE slug = ?', [slug])
+  await db.run('UPDATE rdcms_themes SET is_active = 0')
+  await db.run('UPDATE rdcms_themes SET is_active = 1 WHERE slug = ?', [slug])
   return hydrateTheme({ ...existing, is_active: 1 })
 }
 
 export async function saveThemeSettings(slug, settings) {
-  const row = await db.get('SELECT * FROM themes WHERE slug = ?', [slug])
+  const row = await db.get('SELECT * FROM rdcms_themes WHERE slug = ?', [slug])
   if (!row) throw new Error('Theme not found')
-  await db.run('UPDATE themes SET settings = ? WHERE slug = ?', [JSON.stringify(settings), slug])
+  await db.run('UPDATE rdcms_themes SET settings = ? WHERE slug = ?', [JSON.stringify(settings), slug])
   return hydrateTheme({ ...row, settings: JSON.stringify(settings) })
 }
 
@@ -123,7 +123,7 @@ export async function registerThemeFromDir(themeDir, { forceActive = false } = {
   const defaults = mergeSettings(manifest)
   await db.run(
     `
-      INSERT INTO themes (slug, name, version, author, description, is_active, settings, manifest)
+      INSERT INTO rdcms_themes (slug, name, version, author, description, is_active, settings, manifest)
       VALUES (?, ?, ?, ?, ?, ?, ?, ?)
       ON CONFLICT(slug) DO UPDATE SET
         name = excluded.name,
@@ -207,7 +207,7 @@ export async function bootstrapThemesFromDisk() {
     try {
       const manifest = await loadManifestFromDir(dir)
       if (manifest?.slug) {
-        const existing = await db.get('SELECT * FROM themes WHERE slug = ?', [manifest.slug])
+        const existing = await db.get('SELECT * FROM rdcms_themes WHERE slug = ?', [manifest.slug])
         if (!existing) {
           await registerThemeFromDir(dir)
         }

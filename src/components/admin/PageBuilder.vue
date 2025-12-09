@@ -1,10 +1,12 @@
 <script setup>
 import { computed, onBeforeUnmount, onMounted, reactive, ref, watch } from 'vue'
 import { useContentStore } from '../../stores/content'
+import { usePluginStore } from '../../stores/plugins'
 import { resolveMediaUrl } from '../../utils/media'
 
 const model = defineModel({ type: Object, default: () => ({ cols: 4, rows: 4, gap: 16, blocks: [] }) })
 const contentStore = useContentStore()
+const pluginStore = usePluginStore()
 
 const gridRef = ref(null)
 const selectedId = ref(null)
@@ -210,7 +212,7 @@ watch([cols, rows], ([c, r]) => {
 })
 
 // Elements logic
-const elementOptions = [
+const baseElementOptions = [
   { value: 'text', label: 'Text' },
   { value: 'media', label: 'Media' },
   { value: 'gallery', label: 'Gallery' },
@@ -220,6 +222,14 @@ const elementOptions = [
   { value: 'posts', label: 'Posts' },
   { value: 'menu', label: 'Menu' }
 ]
+
+const elementOptions = computed(() => {
+  const pluginElements = (pluginStore.pluginElements || []).map(el => ({
+    value: el.type,
+    label: el.label || el.type
+  }))
+  return [...baseElementOptions, ...pluginElements]
+})
 
 const pendingElementType = ref('text')
 
@@ -235,6 +245,11 @@ function addElementToBlock() {
   } else if (elem.type === 'menu') {
     const defaultMenu = contentStore.navigationMenus.find(m => m.is_default) || contentStore.navigationMenus[0]
     elem.data = { menuId: defaultMenu?.id || null, orientation: 'horizontal' }
+  } else {
+    const pluginDef = (pluginStore.pluginElements || []).find(el => el.type === elem.type)
+    if (pluginDef?.defaults) {
+      elem.data = { ...pluginDef.defaults }
+    }
   }
   updateBlock({
     elements: [...(selectedBlock.value.elements || []), elem]
@@ -544,6 +559,7 @@ function confirmMediaSelection() {
               <p class="text-[10px] text-gray-500">Menus use navigation items saved in the Navigation screen.</p>
             </div>
 
+
             <div v-else-if="selectedElement.type === 'custom'" class="space-y-2">
               <label class="text-xs text-gray-600">HTML</label>
               <textarea class="w-full border rounded px-3 py-2" rows="4" :value="selectedElement.data?.html || ''" @input="updateElementData({ html: $event.target.value })" />
@@ -553,6 +569,18 @@ function confirmMediaSelection() {
               <p class="text-xs text-gray-600">Contact form will render with default fields. You can add a custom form id or heading.</p>
               <label class="text-xs text-gray-600">Form ID</label>
               <input type="text" class="w-full border rounded px-3 py-2" :value="selectedElement.data?.formId || ''" @input="updateElementData({ formId: $event.target.value })" />
+            </div>
+
+            <div v-else-if="selectedElement.data?.mode !== undefined" class="space-y-2">
+              <label class="text-xs text-gray-600">Display mode</label>
+              <select
+                class="w-full border rounded px-3 py-2"
+                :value="selectedElement.data.mode"
+                @change="updateElementData({ mode: $event.target.value })"
+              >
+                <option value="small-list">Small list</option>
+                <option value="medium-list">Medium list</option>
+              </select>
             </div>
 
             <div v-else>

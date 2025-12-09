@@ -99,6 +99,18 @@ const routes = [
         name: 'admin-design',
         component: () => import('../views/admin/Design.vue'),
         meta: { requiresAuth: true }
+      },
+      {
+        path: 'plugins',
+        name: 'admin-plugins',
+        component: () => import('../views/admin/Plugins.vue'),
+        meta: { requiresAuth: true }
+      },
+      {
+        path: ':plugin',
+        name: 'admin-plugin-host',
+        component: () => import('../views/admin/PluginHost.vue'),
+        meta: { requiresAuth: true, plugin: 'dynamic' }
       }
     ]
   }
@@ -111,11 +123,26 @@ const router = createRouter({
 
 router.beforeEach((to, from, next) => {
   const authStore = useAuthStore()
+  const requiresPlugin = to.meta?.plugin
 
   if (to.meta.requiresAuth && !authStore.isAuthenticated) {
     next({ name: 'admin-login' })
   } else if (to.name === 'admin-login' && authStore.isAuthenticated) {
     next({ name: 'admin' })
+  } else if (requiresPlugin) {
+    import('../stores/plugins').then(async ({ usePluginStore }) => {
+      const pluginStore = usePluginStore()
+      if (!pluginStore.plugins.length) {
+        await pluginStore.fetchPlugins()
+      }
+      const slug = to.params.plugin || to.path.replace('/admin/', '').split('/')[0]
+      const isActive = pluginStore.plugins.find(p => p.slug === slug)?.isActive
+      if (isActive) {
+        next()
+      } else {
+        next({ name: 'admin-plugins' })
+      }
+    })
   } else {
     next()
   }

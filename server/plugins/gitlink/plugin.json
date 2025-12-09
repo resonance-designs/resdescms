@@ -1,0 +1,23 @@
+{
+  "slug": "gitlink",
+  "name": "GitLink",
+  "version": "1.0.0",
+  "description": "Connect GitHub via OAuth and render repositories via shortcode/block.",
+  "adminMenu": [
+    { "path": "/admin/gitlink", "label": "GitLink" }
+  ],
+  "serverRoutes": "routes.js",
+  "adminView": "/server/plugins/gitlink/admin/GitLink.vue",
+  "shortcodeHandler": "/server/plugins/gitlink/shortcodes.js",
+  "clientDataLoader": "/server/plugins/gitlink/clientDataLoader.js",
+  "elements": [
+    { "type": "github-repos", "label": "GitHub Repos", "defaults": { "mode": "small-list" } }
+  ],
+  "defaultSettings": {
+    "clientId": "",
+    "clientSecret": "",
+    "redirectUri": "http://localhost:3001/api/plugins/gitlink/callback",
+    "owner": "",
+    "repos": []
+  }
+}
