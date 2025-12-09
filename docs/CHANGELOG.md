@@ -1,5 +1,8 @@
 # Changelog
 
+## v0.2.3 (alpha)
+-   Plugin added: RDCommerce (Ecommerce Integration); Complete Square payment processor integration with OAuth authentication, inventory import with date/stock filters, and full product management interface. Supports sandbox/production modes with developer toggle. Products stored as posts with metadata (SKU, price, stock, Square ID). Self-contained plugin with no core CMS modifications.
+
 ## v0.2.2 (alpha)
 -   Plugin system enhanced: GitLink and GLink plugins made fully self-contained with generic plugin data loading, shortcode context, and client script injection interfaces. No hardcoded plugin references in core application code.
 
