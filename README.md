@@ -44,7 +44,7 @@ A modern, full-featured CMS built with Vue 3 + Vite, Express.js, and SQLite.
 ## Plugins
 - Upload/activate plugins under **Admin -> Plugins**. Plugins mount their own API routes from `server/plugins/<slug>/routes.js` and expose admin menu items from their manifest (only shown when active).
 - Bundled examples:
-  - **GLink** (Google Analytics/AdSense): Configure via admin (Client ID/Secret + redirect URI), connect to Google, pick account/property/stream, and optionally enable testing mode or “Track Admin Usage” to inject GA on admin routes. Optional env vars (`GLINK_CLIENT_ID`, `GLINK_CLIENT_SECRET`, `GLINK_REDIRECT_URI`) are supported but UI settings take priority.
+  - **GLink** (Google Analytics/AdSense): Self-contained plugin for Google integration - configure via admin (Client ID/Secret + redirect URI), connect to Google, pick account/property/stream, and optionally enable testing mode or "Track Admin Usage" to inject GA on admin routes. Optional env vars (`GLINK_CLIENT_ID`, `GLINK_CLIENT_SECRET`, `GLINK_REDIRECT_URI`) are supported but UI settings take priority.
   - **GitLink** (GitHub): Self-contained plugin for GitHub integration - connect via OAuth to list repos, render via `[gitlink mode="small-list|medium-list"]` shortcode or the "GitHub Repos" block element. Optional env vars (`GITLINK_CLIENT_ID`, `GITLINK_CLIENT_SECRET`, `GITLINK_REDIRECT_URI`) are supported but UI settings take priority.
 - Plugin admin UIs are loaded from each plugin's manifest (`adminView`), keeping plugin frontends bundled with the plugin.
 

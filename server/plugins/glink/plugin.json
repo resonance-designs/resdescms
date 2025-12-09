@@ -8,6 +8,7 @@
   ],
   "serverRoutes": "routes.js",
   "adminView": "/server/plugins/glink/admin/GLink.vue",
+  "clientScriptInjector": "/server/plugins/glink/clientScriptInjector.js",
   "defaultSettings": {
     "gaId": "",
     "adsenseClient": "",

@@ -1,7 +1,7 @@
 # Changelog
 
 ## v0.2.2 (alpha)
--   Plugin system enhanced: GitLink plugin made fully self-contained with generic plugin data loading and shortcode context interfaces. No hardcoded plugin references in core application code.
+-   Plugin system enhanced: GitLink and GLink plugins made fully self-contained with generic plugin data loading, shortcode context, and client script injection interfaces. No hardcoded plugin references in core application code.
 
 ## v0.2.1 (alpha)
 -   Plugin added: GitLink (GitHub Linking); OAuth configurable from the admin UI (Client ID/Secret/redirect).

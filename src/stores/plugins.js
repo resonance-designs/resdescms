@@ -8,16 +8,17 @@ export const usePluginStore = defineStore('plugins', () => {
   const plugins = ref([])
   const loading = ref(false)
   const scriptsInjected = ref(false)
-  const injectedGaId = ref(null)
   const pluginElements = ref([])
   const shortcodeHandlers = ref({})
   const elementRenderers = ref({})
   const clientDataLoaders = ref({})
+  const clientScriptInjectors = ref({})
   const pluginData = ref({})
 
   const shortcodeModules = import.meta.glob('/server/plugins/**/shortcodes.{js,ts}', { eager: false })
   const elementModules = import.meta.glob('/server/plugins/**/elements.{js,ts}', { eager: false })
   const clientDataLoaderModules = import.meta.glob('/server/plugins/**/clientDataLoader.{js,ts}', { eager: false })
+  const clientScriptInjectorModules = import.meta.glob('/server/plugins/**/clientScriptInjector.{js,ts}', { eager: false })
 
   async function fetchPlugins() {
     try {
@@ -67,6 +68,7 @@ export const usePluginStore = defineStore('plugins', () => {
     const handlers = {}
     const renderers = {}
     const dataLoaders = {}
+    const scriptInjectors = {}
     const active = plugins.value.filter(p => p.isActive)
     for (const plugin of active) {
       const manifest = plugin.manifest || {}
@@ -103,6 +105,21 @@ export const usePluginStore = defineStore('plugins', () => {
           console.error('Failed to load client data loader for plugin', plugin.slug, err)
         }
       }
+      if (manifest.clientScriptInjector) {
+        const normalized = manifest.clientScriptInjector.replace(/\\/g, '/')
+        const key = Object.keys(clientScriptInjectorModules).find(k => k.endsWith(normalized))
+        try {
+          if (key) {
+            const mod = await clientScriptInjectorModules[key]()
+            const injector = mod.injectClientScripts || mod.default
+            if (typeof injector === 'function') {
+              scriptInjectors[plugin.slug] = injector
+            }
+          }
+        } catch (err) {
+          console.error('Failed to load client script injector for plugin', plugin.slug, err)
+        }
+      }
       const elementKey = Object.keys(elementModules).find(k => k.includes(`/server/plugins/${plugin.slug}/`))
       if (elementKey) {
         try {
@@ -128,6 +145,7 @@ export const usePluginStore = defineStore('plugins', () => {
     shortcodeHandlers.value = handlers
     elementRenderers.value = renderers
     clientDataLoaders.value = dataLoaders
+    clientScriptInjectors.value = scriptInjectors
   }
 
   function activePlugins() {
@@ -148,62 +166,15 @@ export const usePluginStore = defineStore('plugins', () => {
   }
 
   function injectClientScripts({ includeAdmin = false } = {}) {
-    const head = document.head
-    let currentGaId = null
-
-    const removeExisting = () => {
-      document.querySelectorAll('script[data-glink-ga-loader], script[data-glink-ga-inline]').forEach(el => el.remove())
-    }
-
+    let hasScripts = false
     activePlugins().forEach(plugin => {
-      if (plugin.slug === 'glink') {
-        const { gaId, headSnippet, testing, trackAdmin } = plugin.settings || {}
-        if (!includeAdmin && trackAdmin === false && window.location.pathname.startsWith('/admin')) {
-          return
-        }
-        currentGaId = gaId || null
-        if (currentGaId && injectedGaId.value && injectedGaId.value !== currentGaId) {
-          removeExisting()
-        }
-        if (!currentGaId) {
-          removeExisting()
-          injectedGaId.value = null
-        }
-        if (gaId) {
-          const existingLoader = document.querySelector(`script[data-glink-ga-loader="${gaId}"]`)
-          if (!existingLoader) {
-            const script = document.createElement('script')
-            script.async = true
-            script.src = `https://www.googletagmanager.com/gtag/js?id=${gaId}`
-            script.setAttribute('data-glink-ga-loader', gaId)
-            head.appendChild(script)
-          }
-          const existingInline = document.querySelector(`script[data-glink-ga-inline="${gaId}"]`)
-          if (!existingInline) {
-            const inline = document.createElement('script')
-            inline.setAttribute('data-glink-ga-inline', gaId)
-            inline.innerHTML = `
-              window.dataLayer = window.dataLayer || [];
-              function gtag(){dataLayer.push(arguments);}
-              gtag('js', new Date());
-              gtag('config', '${gaId}', ${testing ? "{cookie_domain:'none'}" : '{}'});
-            `
-            head.appendChild(inline)
-          }
-          injectedGaId.value = gaId
-        }
-        if (headSnippet) {
-          const existingSnippet = document.querySelector('script[data-glink-head-snippet="1"]')
-          if (!existingSnippet) {
-            const snippet = document.createElement('script')
-            snippet.setAttribute('data-glink-head-snippet', '1')
-            snippet.innerHTML = headSnippet
-            head.appendChild(snippet)
-          }
-        }
+      const injector = clientScriptInjectors.value[plugin.slug]
+      if (injector && typeof injector === 'function') {
+        const result = injector(plugin, { includeAdmin })
+        if (result) hasScripts = true
       }
     })
-    scriptsInjected.value = !!currentGaId
+    scriptsInjected.value = hasScripts
   }
 
   return {
