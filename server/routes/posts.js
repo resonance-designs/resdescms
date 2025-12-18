@@ -23,12 +23,54 @@ async function attachMeta(posts) {
 
 router.get('/', async (req, res) => {
   try {
+    const limitParam = req.query.limit
+    const pageParam = req.query.page
+    const paginate = typeof limitParam !== 'undefined' || typeof pageParam !== 'undefined'
+
+    if (!paginate || limitParam === 'all') {
+      const posts = await db.all(`
+        SELECT p.*, c.name as category_name FROM rdcms_posts p
+        LEFT JOIN rdcms_categories c ON p.category_id = c.id
+        ORDER BY p.created_at DESC
+      `)
+
+      const data = await attachMeta(posts)
+      const total = data.length
+      return res.json({
+        data,
+        pagination: {
+          page: 1,
+          limit: total || 0,
+          total,
+          pages: 1
+        }
+      })
+    }
+
+    const page = Math.max(parseInt(pageParam, 10) || 1, 1)
+    const limit = Math.max(parseInt(limitParam, 10) || 10, 1)
+    const offset = (page - 1) * limit
+
+    const totalRow = await db.get('SELECT COUNT(*) as count FROM rdcms_posts')
     const posts = await db.all(`
       SELECT p.*, c.name as category_name FROM rdcms_posts p
       LEFT JOIN rdcms_categories c ON p.category_id = c.id
       ORDER BY p.created_at DESC
-    `)
-    res.json(await attachMeta(posts))
+      LIMIT ? OFFSET ?
+    `, [limit, offset])
+
+    const data = await attachMeta(posts)
+    const total = totalRow?.count || 0
+
+    res.json({
+      data,
+      pagination: {
+        page,
+        limit,
+        total,
+        pages: Math.max(Math.ceil(total / limit), 1)
+      }
+    })
   } catch (error) {
     res.status(500).json({ error: error.message })
   }

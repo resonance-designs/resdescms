@@ -1,10 +1,25 @@
 <script setup>
 import { computed, onMounted, ref, watch } from 'vue'
 import axios from 'axios'
+import {
+  IconSettings2,
+  IconPalette,
+  IconAdjustmentsAlt,
+  IconMenu2,
+  IconPhoto,
+  IconUpload,
+  IconDeviceFloppy,
+  IconCircleCheck,
+  IconLayoutNavbar,
+  IconLayoutRows,
+  IconLayoutSidebar,
+  IconLayoutBottombar
+} from '@tabler/icons-vue'
 import { useThemeStore } from '../../stores/theme'
 import { useContentStore } from '../../stores/content'
 import { resolveMediaUrl, apiBase } from '../../utils/media'
 import PageBuilder from '../../components/admin/PageBuilder.vue'
+import Navigation from './Navigation.vue'
 
 const themeStore = useThemeStore()
 
@@ -26,7 +41,7 @@ const themeSettingsDraft = ref({})
 const themeFile = ref(null)
 const installingTheme = ref(false)
 const themeMessage = ref('')
-const mediaModal = ref({ open: false, target: null, mode: 'single' })
+const mediaModal = ref({ open: false, target: null, mode: 'single', onApply: null })
 const mediaSelection = ref(null)
 const contentStore = useContentStore()
 const fontSelection = ref(null)
@@ -65,6 +80,11 @@ watch(
       headerLayout: { cols: 4, rows: 2, gap: 16, blocks: [] },
       footerLayout: { cols: 4, rows: 2, gap: 16, blocks: [] },
       maxWidth: 1200,
+      backgroundImage: '',
+      backgroundRepeat: 'no-repeat',
+      backgroundSize: 'cover',
+      backgroundPosition: 'center center',
+      backgroundAttachment: 'scroll',
       containerPaddingTop: 0,
       containerPaddingRight: 0,
       containerPaddingBottom: 0,
@@ -174,9 +194,9 @@ async function saveDesign() {
   }
 }
 
-function openMediaModal(target) {
+function openMediaModal(target, onApply = null) {
   mediaSelection.value = null
-  mediaModal.value = { open: true, target, mode: 'single' }
+  mediaModal.value = { open: true, target, mode: 'single', onApply }
   if (!contentStore.media.length) {
     contentStore.fetchMedia()
   }
@@ -194,6 +214,14 @@ async function onUploadMedia(evt) {
   await contentStore.fetchMedia()
 }
 
+async function onUploadThemeBackground(evt) {
+  const file = evt.target.files?.[0]
+  if (!file) return
+  const uploaded = await contentStore.uploadMedia(file)
+  themeSettingsDraft.value.backgroundImage = uploaded.url
+  await contentStore.fetchMedia()
+}
+
 function selectMedia(id) {
   mediaSelection.value = id
 }
@@ -205,7 +233,11 @@ function applyMediaSelection() {
   }
   const file = contentStore.media.find(m => m.id === mediaSelection.value)
   if (file) {
-    design.value[mediaModal.value.target] = file.url
+    if (typeof mediaModal.value.onApply === 'function') {
+      mediaModal.value.onApply(file)
+    } else {
+      design.value[mediaModal.value.target] = file.url
+    }
   }
   closeMediaModal()
 }
@@ -277,18 +309,28 @@ function updateThemeSetting(key, value) {
   <div>
     <div class="flex gap-4 mb-6">
       <button
-        class="px-4 py-2 rounded"
-        :class="activeTab === 'general' ? 'bg-rd-orange text-white' : 'bg-gray-200 text-gray-700'"
+        class="px-4 py-2 rounded cursor-pointer flex items-center gap-2"
+        :class="activeTab === 'general' ? 'bg-rd-orange text-white' : 'bg-gray-300 text-gray-700'"
         @click="activeTab = 'general'"
       >
-        General
+        <IconAdjustmentsAlt :size="18" />
+        <span>General</span>
       </button>
       <button
-        class="px-4 py-2 rounded"
-        :class="activeTab === 'theme' ? 'bg-rd-orange text-white' : 'bg-gray-200 text-gray-700'"
+        class="px-4 py-2 rounded cursor-pointer flex items-center gap-2"
+        :class="activeTab === 'theme' ? 'bg-rd-orange text-white' : 'bg-gray-300 text-gray-700'"
         @click="activeTab = 'theme'"
       >
-        Theme
+        <IconPalette :size="18" />
+        <span>Theme</span>
+      </button>
+      <button
+        class="px-4 py-2 rounded cursor-pointer flex items-center gap-2"
+        :class="activeTab === 'menus' ? 'bg-rd-orange text-white' : 'bg-gray-300 text-gray-700'"
+        @click="activeTab = 'menus'"
+      >
+        <IconMenu2 :size="18" />
+        <span>Menus</span>
       </button>
     </div>
 
@@ -344,8 +386,9 @@ function updateThemeSetting(key, value) {
                   </select>
                 </div>
                 <div class="flex items-center gap-3">
-                  <label class="px-4 py-2 bg-gray-800 text-white rounded cursor-pointer">
-                    Upload Font
+                  <label class="px-4 py-2 bg-gray-800 text-white rounded cursor-pointer flex items-center gap-2">
+                    <IconUpload :size="16" />
+                    <span>Upload Font</span>
                     <input type="file" class="hidden" @change="onUploadFont" accept=".ttf,.otf,.woff,.woff2,.eot">
                   </label>
                   <p class="text-xs text-gray-500">Upload font files to add them to the dropdown.</p>
@@ -360,9 +403,15 @@ function updateThemeSetting(key, value) {
                   <label class="block text-sm font-medium text-gray-700 mb-1">Site Logo</label>
                   <div class="flex gap-2">
                     <input v-model="design.logoUrl" type="url" class="w-full px-3 py-2 border border-gray-300 rounded" placeholder="https://...">
-                    <button type="button" class="px-3 py-2 bg-gray-800 text-white rounded" @click="openMediaModal('logoUrl')">Library</button>
+                    <button type="button" class="px-3 py-2 bg-gray-800 text-white rounded cursor-pointer flex items-center gap-2" @click="openMediaModal('logoUrl')">
+                      <IconPhoto :size="16" />
+                      <span>Library</span>
+                    </button>
                     <label class="px-3 py-2 bg-rd-orange text-white rounded cursor-pointer">
-                      Upload
+                      <span class="flex items-center gap-2">
+                        <IconUpload :size="16" />
+                        <span>Upload</span>
+                      </span>
                       <input type="file" class="hidden" @change="onUploadMedia">
                     </label>
                   </div>
@@ -372,9 +421,15 @@ function updateThemeSetting(key, value) {
                   <label class="block text-sm font-medium text-gray-700 mb-1">Favicon</label>
                   <div class="flex gap-2">
                     <input v-model="design.faviconUrl" type="url" class="w-full px-3 py-2 border border-gray-300 rounded" placeholder="https://...">
-                    <button type="button" class="px-3 py-2 bg-gray-800 text-white rounded" @click="openMediaModal('faviconUrl')">Library</button>
+                    <button type="button" class="px-3 py-2 bg-gray-800 text-white rounded cursor-pointer flex items-center gap-2" @click="openMediaModal('faviconUrl')">
+                      <IconPhoto :size="16" />
+                      <span>Library</span>
+                    </button>
                     <label class="px-3 py-2 bg-rd-orange text-white rounded cursor-pointer">
-                      Upload
+                      <span class="flex items-center gap-2">
+                        <IconUpload :size="16" />
+                        <span>Upload</span>
+                      </span>
                       <input type="file" class="hidden" @change="onUploadMedia">
                     </label>
                   </div>
@@ -388,11 +443,13 @@ function updateThemeSetting(key, value) {
             </div>
 
             <div class="flex gap-3 pt-6 border-t">
-              <button type="submit" class="bg-rd-orange text-white px-6 py-2 rounded hover:bg-rd-orange-light transition">
-                Save Design Settings
+              <button type="submit" class="bg-rd-orange text-white px-6 py-2 rounded hover:bg-rd-orange-light transition cursor-pointer flex items-center gap-2">
+                <IconDeviceFloppy :size="18" />
+                <span>Save Design Settings</span>
               </button>
-              <button v-if="saved" type="button" disabled class="bg-green-600 text-white px-6 py-2 rounded">
-                Saved
+              <button v-if="saved" type="button" disabled class="bg-green-600 text-white px-6 py-2 rounded flex items-center gap-2">
+                <IconCircleCheck :size="18" />
+                <span>Saved</span>
               </button>
             </div>
           </form>
@@ -428,7 +485,7 @@ function updateThemeSetting(key, value) {
       </div>
     </div>
 
-    <div v-else class="space-y-6">
+    <div v-else-if="activeTab === 'theme'" class="space-y-6">
       <div class="bg-white rounded-lg shadow-md p-6">
         <h3 class="text-lg font-semibold mb-4">Install Theme</h3>
         <div class="flex flex-col md:flex-row md:items-center gap-3">
@@ -439,11 +496,12 @@ function updateThemeSetting(key, value) {
             @change="themeFile = $event.target.files?.[0] || null"
           >
           <button
-            class="bg-rd-orange text-white px-6 py-2 rounded hover:bg-rd-orange-light transition disabled:opacity-50"
+            class="bg-rd-orange text-white px-6 py-2 rounded hover:bg-rd-orange-light transition disabled:opacity-50 cursor-pointer flex items-center gap-2"
             :disabled="installingTheme"
             @click="uploadTheme"
           >
-            {{ installingTheme ? 'Installing...' : 'Upload Theme Zip' }}
+            <IconUpload :size="18" />
+            <span>{{ installingTheme ? 'Installing...' : 'Upload Theme Zip' }}</span>
           </button>
           <p class="text-sm text-gray-600" v-if="themeMessage">{{ themeMessage }}</p>
         </div>
@@ -457,11 +515,16 @@ function updateThemeSetting(key, value) {
           <button
             v-for="tab in ['management','header','body','footer','sidebar']"
             :key="tab"
-            class="px-3 py-2 rounded text-sm"
-            :class="themeSubTab === tab ? 'bg-rd-orange text-white' : 'bg-gray-100 text-gray-700'"
+            class="px-3 py-2 rounded text-sm cursor-pointer flex items-center gap-2"
+            :class="themeSubTab === tab ? 'bg-rd-orange text-white' : 'bg-gray-200 text-gray-700'"
             @click="themeSubTab = tab"
           >
-            {{ tab.charAt(0).toUpperCase() + tab.slice(1) }}
+            <IconSettings2 v-if="tab === 'management'" :size="16" />
+            <IconLayoutNavbar v-else-if="tab === 'header'" :size="16" />
+            <IconLayoutRows v-else-if="tab === 'body'" :size="16" />
+            <IconLayoutBottombar v-else-if="tab === 'footer'" :size="16" />
+            <IconLayoutSidebar v-else-if="tab === 'sidebar'" :size="16" />
+            <span>{{ tab.charAt(0).toUpperCase() + tab.slice(1) }}</span>
           </button>
         </div>
 
@@ -485,10 +548,11 @@ function updateThemeSetting(key, value) {
               </span>
               <button
                 v-else
-                class="bg-rd-orange text-white px-4 py-2 rounded hover:bg-rd-orange-light transition"
+                class="bg-rd-orange text-white px-4 py-2 rounded hover:bg-rd-orange-light transition cursor-pointer flex items-center gap-2"
                 @click="activateTheme(theme.slug)"
             >
-              Activate
+              <IconSettings :size="16" />
+              <span>Activate</span>
             </button>
           </div>
         </div>
@@ -501,25 +565,116 @@ function updateThemeSetting(key, value) {
               </p>
 
               <div class="space-y-6">
-                <div v-if="managementFields.length" class="space-y-4">
-                  <div v-for="field in managementFields.slice(0,4)" :key="field.key" class="space-y-1">
-                    <label class="block text-sm font-medium text-gray-700">{{ field.label }}</label>
-                    <input
-                      class="w-full border border-gray-300 rounded px-3 py-2"
-                      :type="field.type || 'text'"
-                      :value="themeSettingsDraft[field.key]"
-                      @input="updateThemeSetting(field.key, $event.target.value)"
-                    >
+                <div class="space-y-2">
+                  <h5 class="text-sm font-semibold">Theme Colors</h5>
+                  <div class="grid grid-cols-1 md:grid-cols-4 gap-3">
+                    <div class="space-y-1">
+                      <label class="block text-sm font-medium text-gray-700">Primary</label>
+                      <div class="flex items-center gap-2">
+                        <input type="color" class="w-12 h-10 border border-gray-300 rounded cursor-pointer" v-model="themeSettingsDraft.primaryColor">
+                        <input type="text" class="flex-1 border rounded px-3 py-2" v-model="themeSettingsDraft.primaryColor" placeholder="#FF6B35">
+                      </div>
+                    </div>
+                    <div class="space-y-1">
+                      <label class="block text-sm font-medium text-gray-700">Accent</label>
+                      <div class="flex items-center gap-2">
+                        <input type="color" class="w-12 h-10 border border-gray-300 rounded cursor-pointer" v-model="themeSettingsDraft.accentColor">
+                        <input type="text" class="flex-1 border rounded px-3 py-2" v-model="themeSettingsDraft.accentColor" placeholder="#1B998B">
+                      </div>
+                    </div>
+                    <div class="space-y-1">
+                      <label class="block text-sm font-medium text-gray-700">Text</label>
+                      <div class="flex items-center gap-2">
+                        <input type="color" class="w-12 h-10 border border-gray-300 rounded cursor-pointer" v-model="themeSettingsDraft.textColor">
+                        <input type="text" class="flex-1 border rounded px-3 py-2" v-model="themeSettingsDraft.textColor" placeholder="#111827">
+                      </div>
+                    </div>
+                    <div class="space-y-1">
+                      <label class="block text-sm font-medium text-gray-700">Background</label>
+                      <div class="flex items-center gap-2">
+                        <input type="color" class="w-12 h-10 border border-gray-300 rounded cursor-pointer" v-model="themeSettingsDraft.backgroundColor">
+                        <input type="text" class="flex-1 border rounded px-3 py-2" v-model="themeSettingsDraft.backgroundColor" placeholder="#ffffff">
+                      </div>
+                    </div>
                   </div>
-                  <div>
-                    <label class="block text-sm font-medium text-gray-700">Content Max Width (px)</label>
+                </div>
+
+                <div class="space-y-2">
+                  <h5 class="text-sm font-semibold">Background Image</h5>
+                  <div class="flex flex-col md:flex-row md:items-center gap-3">
                     <input
                       type="text"
-                      class="w-full border border-gray-300 rounded px-3 py-2"
-                      v-model="themeSettingsDraft.maxWidth"
-                      placeholder="e.g. 1200 or 1200px"
+                      class="flex-1 border rounded px-3 py-2"
+                      v-model="themeSettingsDraft.backgroundImage"
+                      placeholder="https://... or /uploads/hero.jpg"
                     >
+                    <div class="flex items-center gap-2">
+                      <button
+                        type="button"
+                        class="px-3 py-2 bg-gray-800 text-white rounded cursor-pointer flex items-center gap-2"
+                        @click="openMediaModal('themeBackgroundImage', (file) => { themeSettingsDraft.backgroundImage = file.url })"
+                      >
+                        <IconPhoto :size="16" />
+                        <span>Library</span>
+                      </button>
+                      <label class="px-3 py-2 bg-rd-orange text-white rounded cursor-pointer flex items-center gap-2">
+                        <IconUpload :size="16" />
+                        <span>Upload</span>
+                        <input type="file" class="hidden" accept="image/*" @change="onUploadThemeBackground">
+                      </label>
+                    </div>
                   </div>
+                  <div class="grid grid-cols-1 md:grid-cols-4 gap-3">
+                    <div>
+                      <label class="text-xs text-gray-700">Repeat</label>
+                      <select class="w-full border rounded px-3 py-2" v-model="themeSettingsDraft.backgroundRepeat">
+                        <option value="no-repeat">no-repeat</option>
+                        <option value="repeat">repeat</option>
+                        <option value="repeat-x">repeat-x</option>
+                        <option value="repeat-y">repeat-y</option>
+                      </select>
+                    </div>
+                    <div>
+                      <label class="text-xs text-gray-700">Size</label>
+                      <select class="w-full border rounded px-3 py-2" v-model="themeSettingsDraft.backgroundSize">
+                        <option value="cover">cover</option>
+                        <option value="contain">contain</option>
+                        <option value="auto">auto</option>
+                      </select>
+                    </div>
+                    <div>
+                      <label class="text-xs text-gray-700">Position</label>
+                      <select class="w-full border rounded px-3 py-2" v-model="themeSettingsDraft.backgroundPosition">
+                        <option value="center center">center</option>
+                        <option value="center top">top</option>
+                        <option value="center bottom">bottom</option>
+                        <option value="left center">left</option>
+                        <option value="right center">right</option>
+                        <option value="left top">top left</option>
+                        <option value="right top">top right</option>
+                        <option value="left bottom">bottom left</option>
+                        <option value="right bottom">bottom right</option>
+                      </select>
+                    </div>
+                    <div>
+                      <label class="text-xs text-gray-700">Attachment</label>
+                      <select class="w-full border rounded px-3 py-2" v-model="themeSettingsDraft.backgroundAttachment">
+                        <option value="scroll">scroll</option>
+                        <option value="fixed">fixed</option>
+                        <option value="local">local</option>
+                      </select>
+                    </div>
+                  </div>
+                </div>
+
+                <div>
+                  <label class="block text-sm font-medium text-gray-700">Content Max Width (px)</label>
+                  <input
+                    type="text"
+                    class="w-full border border-gray-300 rounded px-3 py-2"
+                    v-model="themeSettingsDraft.maxWidth"
+                    placeholder="e.g. 1200 or 1200px"
+                  >
                 </div>
 
                 <div class="space-y-3">
@@ -610,10 +765,11 @@ function updateThemeSetting(key, value) {
               </div>
 
               <button
-                class="mt-4 bg-rd-orange text-white px-4 py-2 rounded hover:bg-rd-orange-light transition"
+                class="mt-4 bg-rd-orange text-white px-4 py-2 rounded hover:bg-rd-orange-light transition cursor-pointer flex items-center gap-2"
                 @click="saveThemeSettings"
               >
-                Save
+                <IconDeviceFloppy :size="18" />
+                <span>Save</span>
               </button>
               <p v-if="themeMessage" class="text-xs text-gray-600 mt-2">{{ themeMessage }}</p>
             </div>
@@ -702,8 +858,9 @@ function updateThemeSetting(key, value) {
               </div>
             </div>
           </div>
-          <button class="bg-rd-orange text-white px-4 py-2 rounded hover:bg-rd-orange-light transition" @click="saveThemeSettings">
-            Save Header
+          <button class="bg-rd-orange text-white px-4 py-2 rounded hover:bg-rd-orange-light transition cursor-pointer flex items-center gap-2" @click="saveThemeSettings">
+            <IconDeviceFloppy :size="18" />
+            <span>Save Header</span>
           </button>
         </div>
 
@@ -743,8 +900,9 @@ function updateThemeSetting(key, value) {
               <input type="text" class="w-full border rounded px-3 py-2" v-model="themeSettingsDraft.bodyMarginLeft" placeholder="e.g. 0, auto, inherit">
             </div>
           </div>
-          <button class="bg-rd-orange text-white px-4 py-2 rounded hover:bg-rd-orange-light transition" @click="saveThemeSettings">
-            Save Body Settings
+          <button class="bg-rd-orange text-white px-4 py-2 rounded hover:bg-rd-orange-light transition cursor-pointer flex items-center gap-2" @click="saveThemeSettings">
+            <IconDeviceFloppy :size="18" />
+            <span>Save Body Settings</span>
           </button>
         </div>
 
@@ -791,8 +949,9 @@ function updateThemeSetting(key, value) {
               </div>
             </div>
           </div>
-          <button class="bg-rd-orange text-white px-4 py-2 rounded hover:bg-rd-orange-light transition" @click="saveThemeSettings">
-            Save Footer
+          <button class="bg-rd-orange text-white px-4 py-2 rounded hover:bg-rd-orange-light transition cursor-pointer flex items-center gap-2" @click="saveThemeSettings">
+            <IconDeviceFloppy :size="18" />
+            <span>Save Footer</span>
           </button>
         </div>
 
@@ -860,11 +1019,17 @@ function updateThemeSetting(key, value) {
               </div>
             </div>
           </div>
-          <button class="bg-rd-orange text-white px-4 py-2 rounded hover:bg-rd-orange-light transition" @click="saveThemeSettings">
-            Save Sidebar
+          <button class="bg-rd-orange text-white px-4 py-2 rounded hover:bg-rd-orange-light transition cursor-pointer flex items-center gap-2" @click="saveThemeSettings">
+            <IconDeviceFloppy :size="18" />
+            <span>Save Sidebar</span>
           </button>
         </div>
+
       </div>
+    </div>
+
+    <div v-else-if="activeTab === 'menus'">
+      <Navigation />
     </div>
     <div v-if="mediaModal.open" class="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-50">
       <div class="bg-white rounded-lg shadow-xl w-full max-w-3xl max-h-[80vh] flex flex-col">

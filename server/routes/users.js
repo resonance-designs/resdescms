@@ -7,8 +7,34 @@ const router = express.Router()
 
 router.get('/', authenticateToken, async (req, res) => {
   try {
-    const users = await db.all('SELECT id, username, email, created_at FROM rdcms_users')
-    res.json(users)
+    const limitParam = req.query.limit
+    const pageParam = req.query.page
+    const paginate = typeof limitParam !== 'undefined' || typeof pageParam !== 'undefined'
+
+    if (!paginate || limitParam === 'all') {
+      const users = await db.all('SELECT id, username, email, created_at FROM rdcms_users ORDER BY created_at DESC')
+      const total = users.length
+      return res.json({
+        data: users,
+        pagination: { page: 1, limit: total || 0, total, pages: 1 }
+      })
+    }
+
+    const page = Math.max(parseInt(pageParam, 10) || 1, 1)
+    const limit = Math.max(parseInt(limitParam, 10) || 10, 1)
+    const offset = (page - 1) * limit
+
+    const totalRow = await db.get('SELECT COUNT(*) as count FROM rdcms_users')
+    const users = await db.all(
+      'SELECT id, username, email, created_at FROM rdcms_users ORDER BY created_at DESC LIMIT ? OFFSET ?',
+      [limit, offset]
+    )
+
+    const total = totalRow?.count || 0
+    res.json({
+      data: users,
+      pagination: { page, limit, total, pages: Math.max(Math.ceil(total / limit), 1) }
+    })
   } catch (error) {
     console.error('Error fetching users:', error)
     res.status(500).json({ error: 'Failed to fetch users' })

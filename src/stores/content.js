@@ -7,20 +7,35 @@ const API_BASE_URL = (import.meta.env.VITE_API_BASE || 'http://localhost:3001').
 export const useContentStore = defineStore('content', () => {
   const posts = ref([])
   const postsIndexLoaded = ref(false)
+  const postsPagination = ref({ page: 1, limit: 10, total: 0, pages: 1 })
   const pages = ref([])
+  const pagesPagination = ref({ page: 1, limit: 10, total: 0, pages: 1 })
   const categories = ref([])
   const media = ref([])
+  const mediaPagination = ref({ page: 1, limit: 10, total: 0, pages: 1 })
   const navigationMenus = ref([])
   const loading = ref(false)
 
-  async function fetchPosts() {
+  async function fetchPosts({ page, limit } = {}) {
     try {
       loading.value = true
-      const response = await axios.get(`${API_BASE_URL}/api/posts`)
-      posts.value = response.data
+      const params = {}
+      if (typeof page !== 'undefined') params.page = page
+      if (typeof limit !== 'undefined') params.limit = limit
+
+      const response = await axios.get(`${API_BASE_URL}/api/posts`, { params })
+      posts.value = response.data?.data || []
+      postsPagination.value = response.data?.pagination || {
+        page: page || 1,
+        limit: typeof limit !== 'undefined' ? limit : posts.value.length,
+        total: posts.value.length,
+        pages: 1
+      }
       postsIndexLoaded.value = true
+      return { posts: posts.value, pagination: postsPagination.value }
     } catch (error) {
       console.error('Failed to fetch posts:', error)
+      throw error
     } finally {
       loading.value = false
     }
@@ -79,13 +94,27 @@ export const useContentStore = defineStore('content', () => {
     }
   }
 
-  async function fetchPages() {
+  async function fetchPages({ page, limit } = {}) {
     try {
       loading.value = true
-      const response = await axios.get(`${API_BASE_URL}/api/pages`)
-      pages.value = response.data
+      const params = {}
+      if (typeof page !== 'undefined') params.page = page
+      if (typeof limit !== 'undefined') params.limit = limit
+      if (!Object.keys(params).length) params.limit = 'all'
+
+      const response = await axios.get(`${API_BASE_URL}/api/pages`, { params })
+      const payload = response.data?.data || response.data || []
+      pages.value = payload
+      pagesPagination.value = response.data?.pagination || {
+        page: page || 1,
+        limit: typeof limit !== 'undefined' ? limit : pages.value.length,
+        total: pages.value.length,
+        pages: 1
+      }
+      return { pages: pages.value, pagination: pagesPagination.value }
     } catch (error) {
       console.error('Failed to fetch pages:', error)
+      throw error
     } finally {
       loading.value = false
     }
@@ -144,12 +173,26 @@ export const useContentStore = defineStore('content', () => {
     }
   }
 
-  async function fetchMedia() {
+  async function fetchMedia({ page, limit } = {}) {
     try {
-      const response = await axios.get(`${API_BASE_URL}/api/media`)
-      media.value = response.data
+      const params = {}
+      if (typeof page !== 'undefined') params.page = page
+      if (typeof limit !== 'undefined') params.limit = limit
+      if (!Object.keys(params).length) params.limit = 'all'
+
+      const response = await axios.get(`${API_BASE_URL}/api/media`, { params })
+      const payload = response.data?.data || response.data || []
+      media.value = payload
+      mediaPagination.value = response.data?.pagination || {
+        page: page || 1,
+        limit: typeof limit !== 'undefined' ? limit : media.value.length,
+        total: media.value.length,
+        pages: 1
+      }
+      return { media: media.value, pagination: mediaPagination.value }
     } catch (error) {
       console.error('Failed to fetch media:', error)
+      throw error
     }
   }
 
@@ -276,9 +319,12 @@ export const useContentStore = defineStore('content', () => {
   return {
     posts,
     postsIndexLoaded,
+    postsPagination,
     pages,
+    pagesPagination,
     categories,
     media,
+    mediaPagination,
     navigationMenus,
     loading,
     fetchPosts,

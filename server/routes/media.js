@@ -30,8 +30,34 @@ const router = express.Router()
 
 router.get('/', async (req, res) => {
   try {
-    const media = await db.all('SELECT * FROM rdcms_media ORDER BY created_at DESC')
-    res.json(media)
+    const limitParam = req.query.limit
+    const pageParam = req.query.page
+    const paginate = typeof limitParam !== 'undefined' || typeof pageParam !== 'undefined'
+
+    if (!paginate || limitParam === 'all') {
+      const media = await db.all('SELECT * FROM rdcms_media ORDER BY created_at DESC')
+      const total = media.length
+      return res.json({
+        data: media,
+        pagination: { page: 1, limit: total || 0, total, pages: 1 }
+      })
+    }
+
+    const page = Math.max(parseInt(pageParam, 10) || 1, 1)
+    const limit = Math.max(parseInt(limitParam, 10) || 10, 1)
+    const offset = (page - 1) * limit
+
+    const totalRow = await db.get('SELECT COUNT(*) as count FROM rdcms_media')
+    const media = await db.all(
+      'SELECT * FROM rdcms_media ORDER BY created_at DESC LIMIT ? OFFSET ?',
+      [limit, offset]
+    )
+
+    const total = totalRow?.count || 0
+    res.json({
+      data: media,
+      pagination: { page, limit, total, pages: Math.max(Math.ceil(total / limit), 1) }
+    })
   } catch (error) {
     res.status(500).json({ error: error.message })
   }
@@ -53,7 +79,7 @@ router.post('/upload', authenticateToken, upload.single('file'), async (req, res
       ]
     )
 
-    const media = await db.get('SELECT * FROM media WHERE id = ?', [result.lastID])
+    const media = await db.get('SELECT * FROM rdcms_media WHERE id = ?', [result.lastID])
     res.json(media)
   } catch (error) {
     res.status(500).json({ error: error.message })

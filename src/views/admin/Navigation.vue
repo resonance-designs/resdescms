@@ -1,5 +1,6 @@
 <script setup>
 import { ref, onMounted, computed } from 'vue'
+import { IconPlus, IconDeviceFloppy, IconTrash } from '@tabler/icons-vue'
 import { useContentStore } from '../../stores/content'
 
 const contentStore = useContentStore()
@@ -134,22 +135,25 @@ const currentMenu = computed(() => menus.value.find(m => m.id === selectedMenuId
           <span v-if="menu.is_default" class="text-xs px-2 py-1 bg-green-100 text-green-700 rounded-full">Default</span>
         </div>
         <div class="flex gap-2 mt-4">
-          <button class="px-3 py-2 bg-white border rounded text-sm" @click="selectMenu(menu.id)">
-            Edit
+          <button class="px-3 py-2 bg-white border rounded text-sm cursor-pointer flex items-center gap-2" @click="selectMenu(menu.id)">
+            <IconDeviceFloppy :size="16" />
+            <span>Edit</span>
           </button>
           <button
-            class="px-3 py-2 bg-white border rounded text-sm"
+            class="px-3 py-2 bg-white border rounded text-sm cursor-pointer flex items-center gap-2"
             :class="menu.is_default ? 'text-gray-400 border-gray-200 cursor-not-allowed' : 'text-gray-700 hover:border-gray-400'"
             :disabled="menu.is_default"
             @click="markDefault(menu.id)"
           >
-            Make Default
+            <IconDeviceFloppy :size="16" />
+            <span>Make Default</span>
           </button>
           <button
-            class="px-3 py-2 bg-red-50 text-red-700 border border-red-200 rounded text-sm"
+            class="px-3 py-2 bg-red-50 text-red-700 border border-red-200 rounded text-sm cursor-pointer flex items-center gap-2"
             @click="deleteMenu(menu.id)"
           >
-            Delete
+            <IconTrash :size="16" />
+            <span>Delete</span>
           </button>
         </div>
       </div>
@@ -157,9 +161,10 @@ const currentMenu = computed(() => menus.value.find(m => m.id === selectedMenuId
       <div class="border-2 border-dashed border-gray-300 rounded p-4 bg-white flex flex-col gap-3">
         <p class="font-semibold text-gray-800">Add Menu</p>
         <input v-model="newMenuName" type="text" class="w-full px-3 py-2 border rounded" placeholder="e.g., Footer Links">
-        <button class="bg-rd-orange text-white px-4 py-2 rounded hover:bg-rd-orange-light" @click="addMenu">
-          Create Menu
-        </button>
+      <button class="bg-rd-orange text-white px-4 py-2 rounded hover:bg-rd-orange-light cursor-pointer flex items-center gap-2" @click="addMenu">
+        <IconPlus :size="18" />
+        <span>Create Menu</span>
+      </button>
       </div>
     </div>
 
@@ -171,8 +176,9 @@ const currentMenu = computed(() => menus.value.find(m => m.id === selectedMenuId
           <h4 class="text-md font-semibold text-gray-900">Editing {{ menuLabel(currentMenu) }}</h4>
           <p class="text-sm text-gray-600">Link to existing pages or add custom URLs.</p>
         </div>
-        <button @click="addNavItem" class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">
-          + Add Item
+        <button @click="addNavItem" class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 cursor-pointer flex items-center gap-2">
+          <IconPlus :size="18" />
+          <span>Add Item</span>
         </button>
       </div>
 
@@ -204,15 +210,17 @@ const currentMenu = computed(() => menus.value.find(m => m.id === selectedMenuId
               <option value="_blank">New Tab</option>
             </select>
           </div>
-          <button @click="removeNavItem(index)" class="bg-red-600 text-white px-4 py-2 rounded hover:bg-red-700">
-            Remove
+          <button @click="removeNavItem(index)" class="bg-red-600 text-white px-4 py-2 rounded hover:bg-red-700 cursor-pointer flex items-center gap-2">
+            <IconTrash :size="16" />
+            <span>Remove</span>
           </button>
         </div>
       </div>
 
       <div class="flex gap-4">
-        <button @click="saveNavigation" class="bg-rd-orange text-white px-6 py-2 rounded hover:bg-rd-orange-light transition">
-          Save Menu
+        <button @click="saveNavigation" class="bg-rd-orange text-white px-6 py-2 rounded hover:bg-rd-orange-light transition cursor-pointer flex items-center gap-2">
+          <IconDeviceFloppy :size="18" />
+          <span>Save Menu</span>
         </button>
       </div>
     </div>

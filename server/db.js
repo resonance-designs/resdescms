@@ -294,6 +294,8 @@ function seedDefaults() {
     })
   })
 
+  seedPlaceholderPosts(20)
+
   defaultPages.forEach(page => {
     db.get('SELECT id FROM rdcms_pages WHERE slug = ?', [page.slug], (err, row) => {
       if (err) return console.error('Error checking page:', err)
@@ -356,6 +358,29 @@ function seedNavigationMenus() {
   }
 
   ensureDefaultMenu()
+}
+
+function seedPlaceholderPosts(count) {
+  const placeholders = Array.from({ length: count }, (_, idx) => ({
+    title: `Placeholder Post ${idx + 1}`,
+    slug: `placeholder-post-${idx + 1}`,
+    excerpt: 'Demo placeholder content for pagination testing.',
+    content: `<p>This is placeholder post ${idx + 1} created for pagination samples.</p>`,
+    featured_image: null
+  }))
+
+  placeholders.forEach(post => {
+    db.get('SELECT id FROM rdcms_posts WHERE slug = ?', [post.slug], (err, row) => {
+      if (err) return console.error('Error checking placeholder post:', err)
+      if (!row) {
+        db.run(
+          `INSERT INTO rdcms_posts (title, slug, content, excerpt, featured_image, post_type, published) VALUES (?, ?, ?, ?, ?, 'post', 1)`,
+          [post.title, post.slug, post.content, post.excerpt, post.featured_image],
+          (insertErr) => insertErr && console.error('Error seeding placeholder post:', insertErr)
+        )
+      }
+    })
+  })
 }
 
 export function run(sql, params = []) {

@@ -5,6 +5,7 @@ import { useAuthStore } from '../../stores/auth'
 import { useContentStore } from '../../stores/content'
 import { usePluginStore } from '../../stores/plugins'
 import DashboardCard from '../../components/admin/DashboardCard.vue'
+import Sidebar from '../../components/admin/Sidebar.vue'
 
 const router = useRouter()
 const route = useRoute()
@@ -21,6 +22,7 @@ const stats = ref({
 
 const recentPosts = ref([])
 const recentPages = ref([])
+const open = ref({ content: true, site: true })
 const activePluginMenus = computed(() =>
   (pluginStore.plugins || [])
     .filter(p => p.isActive && p.adminMenu)
@@ -72,7 +74,6 @@ function getPageTitle() {
     '/admin/posts': 'Posts',
     '/admin/pages': 'Pages',
     '/admin/media': 'Media',
-    '/admin/navigation': 'Navigation',
     '/admin/settings': 'Settings',
     '/admin/users': 'Users',
     '/admin/design': 'Design Settings',
@@ -94,99 +95,7 @@ function getPageTitle() {
 <template>
   <div class="flex h-screen bg-gray-100">
     <!-- Sidebar -->
-    <div class="w-64 bg-gray-900 text-white p-6">
-      <div class="mb-8">
-        <h1 class="text-2xl font-avant-garde-demi">ResDesCMS</h1>
-        <p class="text-sm text-gray-400">Admin</p>
-      </div>
-
-      <nav class="space-y-2">
-        <RouterLink
-          to="/admin"
-          class="block px-4 py-2 rounded hover:bg-gray-800 transition"
-          :class="{ 'bg-rd-orange': isActive('/admin') }"
-        >
-          Dashboard
-        </RouterLink>
-        <RouterLink
-          to="/admin/posts"
-          class="block px-4 py-2 rounded hover:bg-gray-800 transition"
-          :class="{ 'bg-rd-orange': isActive('/admin/posts') }"
-        >
-          Posts
-        </RouterLink>
-        <RouterLink
-          to="/admin/pages"
-          class="block px-4 py-2 rounded hover:bg-gray-800 transition"
-          :class="{ 'bg-rd-orange': isActive('/admin/pages') }"
-        >
-          Pages
-        </RouterLink>
-        <RouterLink
-          to="/admin/media"
-          class="block px-4 py-2 rounded hover:bg-gray-800 transition"
-          :class="{ 'bg-rd-orange': isActive('/admin/media') }"
-        >
-          Media
-        </RouterLink>
-        <RouterLink
-          to="/admin/navigation"
-          class="block px-4 py-2 rounded hover:bg-gray-800 transition"
-          :class="{ 'bg-rd-orange': isActive('/admin/navigation') }"
-        >
-          Navigation
-        </RouterLink>
-        <RouterLink
-          to="/admin/settings"
-          class="block px-4 py-2 rounded hover:bg-gray-800 transition"
-          :class="{ 'bg-rd-orange': isActive('/admin/settings') }"
-        >
-          Settings
-        </RouterLink>
-        <RouterLink
-          to="/admin/users"
-          class="block px-4 py-2 rounded hover:bg-gray-800 transition"
-          :class="{ 'bg-rd-orange': isActive('/admin/users') }"
-        >
-          Users
-        </RouterLink>
-        <RouterLink
-          to="/admin/design"
-          class="block px-4 py-2 rounded hover:bg-gray-800 transition"
-          :class="{ 'bg-rd-orange': isActive('/admin/design') }"
-        >
-          Design
-        </RouterLink>
-      <RouterLink
-        to="/admin/plugins"
-        class="block px-4 py-2 rounded hover:bg-gray-800 transition"
-        :class="{ 'bg-rd-orange': isActive('/admin/plugins') }"
-      >
-        Plugins
-      </RouterLink>
-        <RouterLink
-          v-for="menu in activePluginMenus"
-          :key="menu.path"
-          :to="menu.path"
-          class="block px-4 py-2 rounded hover:bg-gray-800 transition"
-          :class="{ 'bg-rd-orange': isActive(menu.path) }"
-        >
-          {{ menu.label }}
-        </RouterLink>
-      </nav>
-
-      <div class="mt-12 pt-6 border-t border-gray-700">
-        <RouterLink to="/" class="block px-4 py-2 text-sm text-gray-400 hover:text-white transition mb-4">
-          View Site
-        </RouterLink>
-        <button
-          @click="handleLogout"
-          class="w-full px-4 py-2 bg-red-600 hover:bg-red-700 rounded transition text-sm"
-        >
-          Logout
-        </button>
-      </div>
-    </div>
+    <Sidebar />
 
     <!-- Main Content -->
     <div class="flex-1 overflow-auto">
