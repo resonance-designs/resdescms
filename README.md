@@ -1,5 +1,5 @@
 # ResDesCMS
-Version: **alpha** | Latest release: v0.2.4
+Version: **alpha** | Latest release: v0.2.5
 
 ## About
 A modern, full-featured CMS built with Vue 3 + Vite, Express.js, and SQLite.
@@ -16,7 +16,7 @@ A modern, full-featured CMS built with Vue 3 + Vite, Express.js, and SQLite.
 ## Features
 - Posts, pages, categories, navigation menus, media library
 - Multiple navigation menus with per-item targets; menu block element for layouts (horizontal/vertical)
-- Theme system with header/body/footer/sidebar builders and per-section spacing/borders
+- Theme system with header/body/footer builders, a single-column sidebar builder (with placement + width), and per-section spacing/borders
 - Extensible content via `post_type` and post metadata (rdcms_postmeta) for plugin-style additions
 - Plugin system with upload/activate workflow and bundled GLink plugin (Google Analytics/AdSense) configurable entirely from the admin UI
 - WordPress-style shortcodes for posts/pages/media in rich content
@@ -46,7 +46,7 @@ A modern, full-featured CMS built with Vue 3 + Vite, Express.js, and SQLite.
 - Bundled examples:
   - **RDCommerce** (Ecommerce): Self-contained plugin for Square payment processor integration - configure via admin (Application ID/Access Token), toggle between sandbox/production modes, import inventory with date/stock filters, and manage products with full CRUD operations. Products stored as posts with metadata (SKU, price, stock, Square ID). Optional env vars (`RDCOMMERCE_SQUARE_APP_ID`, `RDCOMMERCE_SQUARE_ACCESS_TOKEN`) are supported but UI settings take priority.
   - **GLink** (Google Analytics/AdSense): Self-contained plugin for Google integration - configure via admin (Client ID/Secret + redirect URI), connect to Google, pick account/property/stream, and optionally enable testing mode or "Track Admin Usage" to inject GA on admin routes. Optional env vars (`GLINK_CLIENT_ID`, `GLINK_CLIENT_SECRET`, `GLINK_REDIRECT_URI`) are supported but UI settings take priority.
-  - **GitLink** (GitHub): Self-contained plugin for GitHub integration - connect via OAuth to list repos, render via `[gitlink mode="small-list|medium-list"]` shortcode or the "GitHub Repos" block element. Optional env vars (`GITLINK_CLIENT_ID`, `GITLINK_CLIENT_SECRET`, `GITLINK_REDIRECT_URI`) are supported but UI settings take priority.
+  - **GitLink** (GitHub): Self-contained plugin for GitHub integration - connect via OAuth to list repos, render via `[gitlink mode="small-list|medium-list"]` shortcode or the "GitHub Repos" block element; plugin auto-loads its renderer and fetches repos on the frontend. Optional env vars (`GITLINK_CLIENT_ID`, `GITLINK_CLIENT_SECRET`, `GITLINK_REDIRECT_URI`) are supported but UI settings take priority.
 - Plugin admin UIs are loaded from each plugin's manifest (`adminView`), keeping plugin frontends bundled with the plugin.
 
 ## Shortcodes

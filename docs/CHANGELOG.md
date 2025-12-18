@@ -1,16 +1,21 @@
 # Changelog
 
+## v0.2.5 (alpha)
+-   Sidebar builder now supports a single-column layout with configurable width and placement controls presented side-by-side.
+-   PageBuilder UX: you can remove individual elements without deleting entire blocks; plugin element settings (e.g., GitLink display mode) show when provided by the plugin.
+-   Plugin elements lazy-load their renderers; GitLink block self-fetches repos on the frontend using the public endpoint with an auth fallback to avoid “unsupported element” states.
+
 ## v0.2.4 (alpha)
--   **Security Hardening**: Comprehensive security fixes across all plugins and core systems
--   **Path Traversal Prevention**: Added slug validation to prevent directory traversal attacks in plugin operations
--   **OAuth Security**: Fixed critical OAuth implementation bug in RDCommerce (proper client_secret usage)
--   **Memory Leak Prevention**: Added TTL cleanup for OAuth state storage to prevent unbounded memory growth
--   **Transactional Safety**: Wrapped post metadata operations in database transactions for data integrity
--   **Authentication Fixes**: Added missing JWT headers to all plugin API calls
--   **Input Validation**: Enhanced slug generation and required field validation
--   **Plugin State Consistency**: Fixed plugin activation to run install scripts before marking active
--   **XSS Protection**: Added URL validation and type safety improvements across plugins
--   **Static File Security**: Removed server-side code exposure via static file serving
+-   Security Hardening: Comprehensive security fixes across all plugins and core systems
+-   Path Traversal Prevention: Added slug validation to prevent directory traversal attacks in plugin operations
+-   OAuth Security: Fixed critical OAuth implementation bug in RDCommerce (proper client_secret usage)
+-   Memory Leak Prevention: Added TTL cleanup for OAuth state storage to prevent unbounded memory growth
+-   Transactional Safet: Wrapped post metadata operations in database transactions for data integrity
+-   Authentication Fixes: Added missing JWT headers to all plugin API calls
+-   Input Validation: Enhanced slug generation and required field validation
+-   Plugin State Consistency: Fixed plugin activation to run install scripts before marking active
+-   XSS Protection: Added URL validation and type safety improvements across plugins
+-   Static File Security: Removed server-side code exposure via static file serving
 
 ## v0.2.3 (alpha)
 -   Plugin added: RDCommerce (Ecommerce Integration); Complete Square payment processor integration with OAuth authentication, inventory import with date/stock filters, and full product management interface. Supports sandbox/production modes with developer toggle. Products stored as posts with metadata (SKU, price, stock, Square ID). Self-contained plugin with no core CMS modifications.

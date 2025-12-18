@@ -15,9 +15,19 @@ const dragging = reactive({ active: false, id: null, startX: 0, startY: 0, start
 const moving = reactive({ active: false, id: null, startX: 0, startY: 0, startCol: 1, startRow: 1 })
 const draggingElement = reactive({ blockId: null, elementId: null })
 
+const props = defineProps({
+  lockedCols: {
+    type: Number,
+    default: null
+  }
+})
+
 const cols = computed({
-  get: () => model.value?.cols || 4,
-  set: (v) => { model.value = { ...model.value, cols: Number(v) || 1 } }
+  get: () => props.lockedCols ?? (model.value?.cols || 4),
+  set: (v) => {
+    if (props.lockedCols) return
+    model.value = { ...model.value, cols: Number(v) || 1 }
+  }
 })
 const rows = computed({
   get: () => model.value?.rows || 4,
@@ -230,6 +240,7 @@ const elementOptions = computed(() => {
   }))
   return [...baseElementOptions, ...pluginElements]
 })
+const pluginElementTypes = computed(() => (pluginStore.pluginElements || []).map(el => el.type))
 
 const pendingElementType = ref('text')
 
@@ -280,6 +291,16 @@ function reorderElements(blockId, sourceId, targetId) {
   const [moved] = list.splice(from, 1)
   list.splice(to, 0, moved)
   updateBlock({ elements: list })
+}
+
+function removeElement(blockId, elementId) {
+  const block = blocks.value.find(b => b.id === blockId)
+  if (!block) return
+  const next = (block.elements || []).filter(el => el.id !== elementId)
+  if (block.id === selectedId.value && elementId === selectedElementId.value) {
+    selectedElementId.value = null
+  }
+  updateBlock({ elements: next })
 }
 
 async function handleMediaUpload(file) {
@@ -334,7 +355,7 @@ function confirmMediaSelection() {
 <template>
   <div class="space-y-4">
     <div class="flex flex-wrap gap-4 items-end">
-      <div>
+      <div v-if="!lockedCols">
         <label class="text-sm text-gray-700">Columns</label>
         <input type="number" min="1" max="12" class="border rounded px-3 py-2 w-24" v-model.number="cols" />
       </div>
@@ -399,6 +420,13 @@ function confirmMediaSelection() {
                 @click.stop="selectBlock(block.id); selectElement(el.id)"
               >
                 {{ el.type }}
+                <span
+                  class="ml-1 text-red-500 cursor-pointer"
+                  title="Remove element"
+                  @click.stop="removeElement(block.id, el.id)"
+                >
+                  ✕
+                </span>
               </button>
             </div>
           </div>
@@ -425,7 +453,7 @@ function confirmMediaSelection() {
               <label class="text-xs text-gray-600">Row</label>
               <input type="number" class="w-full border rounded px-3 py-2" min="1" :max="rows" v-model.number="selectedBlock.row" @input="updateBlock({ row: selectedBlock.row })" />
             </div>
-            <div>
+            <div v-if="!lockedCols">
               <label class="text-xs text-gray-600">Column</label>
               <input type="number" class="w-full border rounded px-3 py-2" min="1" :max="cols" v-model.number="selectedBlock.col" @input="updateBlock({ col: selectedBlock.col })" />
             </div>
@@ -433,7 +461,7 @@ function confirmMediaSelection() {
               <label class="text-xs text-gray-600">Row Span</label>
               <input type="number" class="w-full border rounded px-3 py-2" min="1" :max="rows" v-model.number="selectedBlock.rowSpan" @input="updateBlock({ rowSpan: selectedBlock.rowSpan })" />
             </div>
-            <div>
+            <div v-if="!lockedCols">
               <label class="text-xs text-gray-600">Col Span</label>
               <input type="number" class="w-full border rounded px-3 py-2" min="1" :max="cols" v-model.number="selectedBlock.colSpan" @input="updateBlock({ colSpan: selectedBlock.colSpan })" />
             </div>
@@ -467,6 +495,13 @@ function confirmMediaSelection() {
           <div v-if="selectedElement">
             <div class="flex items-center justify-between">
               <p class="text-sm font-semibold">{{ selectedElement.type }} settings</p>
+              <button
+                class="text-xs text-red-600 hover:underline"
+                type="button"
+                @click="removeElement(selectedBlock.id, selectedElement.id)"
+              >
+                Remove element
+              </button>
             </div>
 
             <div v-if="selectedElement.type === 'text'" class="space-y-2">
@@ -570,8 +605,7 @@ function confirmMediaSelection() {
               <label class="text-xs text-gray-600">Form ID</label>
               <input type="text" class="w-full border rounded px-3 py-2" :value="selectedElement.data?.formId || ''" @input="updateElementData({ formId: $event.target.value })" />
             </div>
-
-            <div v-else-if="selectedElement.data?.mode !== undefined" class="space-y-2">
+            <div v-else-if="pluginElementTypes.includes(selectedElement.type) && selectedElement.data?.mode !== undefined" class="space-y-2">
               <label class="text-xs text-gray-600">Display mode</label>
               <select
                 class="w-full border rounded px-3 py-2"
@@ -581,6 +615,7 @@ function confirmMediaSelection() {
                 <option value="small-list">Small list</option>
                 <option value="medium-list">Medium list</option>
               </select>
+              <p class="text-[10px] text-gray-500">Plugin-provided element settings.</p>
             </div>
 
             <div v-else>

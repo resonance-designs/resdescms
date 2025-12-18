@@ -23,7 +23,7 @@ export default {  name: 'My Theme',  slug: 'my-theme',  version: '1.0.0',  autho
 ## Layouts
 
 -   Header and Footer layouts are built with the page builder UI and stored in theme settings (`headerLayout`, `footerLayout`). Frontend rendering reads these layouts and renders their blocks/elements.
--   Sidebar placement and body/sidebar visibility are stored as settings (`showHeader`, `showFooter`, `showSidebar`, `sidebarPlacement`).
+-   Sidebar placement and body/sidebar visibility are stored as settings (`showHeader`, `showFooter`, `showSidebar`, `sidebarPlacement`); sidebar layouts are single-column (`sidebarLayout`) with configurable width (`sidebarWidth`).
 
 ## Packaging and install
 

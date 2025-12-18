@@ -16,6 +16,17 @@ export default {
 
     return () => {
       const el = props.element || {}
+      // Lazy-load plugin element renderers if available
+      if ((pluginStore.pluginElements || []).some(pe => pe.type === el.type)) {
+        pluginStore.ensureElementRenderer?.(el.type)
+      }
+      const pluginRenderer = pluginStore.elementRenderers?.[el.type]
+      if (pluginRenderer?.render && typeof pluginRenderer.render === 'function') {
+        return pluginRenderer.render(el, { h, RouterLink, contentStore, pluginStore })
+      }
+      if ((pluginStore.pluginElements || []).some(pe => pe.type === el.type)) {
+        return h('div', { class: 'text-xs text-gray-500' }, 'Loading plugin element…')
+      }
       switch (el.type) {
         case 'text':
           return h('div', { class: 'prose max-w-none whitespace-pre-wrap' }, el.data?.text || '')
@@ -62,13 +73,8 @@ export default {
 
           return h('nav', { class: classes }, links.length ? links : [h('span', { class: 'text-gray-400 text-sm' }, 'No menu items found')])
         }
-        default: {
-          const pluginRenderer = pluginStore.elementRenderers?.[el.type]
-          if (pluginRenderer?.render && typeof pluginRenderer.render === 'function') {
-            return pluginRenderer.render(el, pluginStore)
-          }
+        default:
           return h('div', { class: 'text-xs text-gray-500' }, `Unsupported element: ${el.type}`)
-        }
       }
     }
   }

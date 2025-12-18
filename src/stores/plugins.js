@@ -152,6 +152,33 @@ export const usePluginStore = defineStore('plugins', () => {
     return plugins.value.filter(p => p.isActive)
   }
 
+  async function ensureElementRenderer(type) {
+    if (elementRenderers.value[type]) return elementRenderers.value[type]
+    const plugin = activePlugins().find(p => (p.manifest?.elements || []).some(el => el.type === type))
+    if (!plugin) return null
+    const elementKey = Object.keys(elementModules).find(k => k.includes(`/server/plugins/${plugin.slug}/`))
+    if (!elementKey) return null
+    try {
+      const mod = await elementModules[elementKey]()
+      const register = mod.registerElements || mod.default
+      if (typeof register === 'function') {
+        const map = register()
+        Object.entries(map || {}).forEach(([t, val]) => {
+          if (!val) return
+          if (typeof val === 'function') {
+            elementRenderers.value[t] = { render: val }
+          } else if (typeof val.render === 'function') {
+            elementRenderers.value[t] = val
+          }
+        })
+      }
+      return elementRenderers.value[type] || null
+    } catch (err) {
+      console.error('Failed to load element renderer for type', type, err)
+      return null
+    }
+  }
+
   async function loadContentData(content, layoutJson) {
     const loaders = Object.values(clientDataLoaders.value)
     await Promise.all(loaders.map(loader => loader(content, layoutJson, { pluginData })))
@@ -192,6 +219,7 @@ export const usePluginStore = defineStore('plugins', () => {
     pluginElements,
     shortcodeHandlers,
     elementRenderers,
+    ensureElementRenderer,
     loadContentData,
     getShortcodeContext,
     injectClientScripts

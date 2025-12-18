@@ -61,6 +61,7 @@ watch(
       showFooter: true,
       showSidebar: true,
       sidebarPlacement: 'right',
+      sidebarLayout: { cols: 1, rows: 4, gap: 12, blocks: [] },
       headerLayout: { cols: 4, rows: 2, gap: 16, blocks: [] },
       footerLayout: { cols: 4, rows: 2, gap: 16, blocks: [] },
       maxWidth: 1200,
@@ -801,11 +802,29 @@ function updateThemeSetting(key, value) {
             <span class="text-sm text-gray-800">Show Sidebar</span>
           </label>
           <div v-if="themeSettingsDraft.showSidebar" class="space-y-3">
-            <label class="text-sm text-gray-700">Sidebar Placement</label>
-            <select class="w-full border rounded px-3 py-2" v-model="themeSettingsDraft.sidebarPlacement">
-              <option value="left">Left</option>
-              <option value="right">Right</option>
-            </select>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+              <div>
+                <label class="text-sm text-gray-700">Sidebar Placement</label>
+                <select class="w-full border rounded px-3 py-2" v-model="themeSettingsDraft.sidebarPlacement">
+                  <option value="left">Left</option>
+                  <option value="right">Right</option>
+                </select>
+              </div>
+              <div>
+                <label class="text-sm text-gray-700">Sidebar Width</label>
+                <input
+                  type="text"
+                  class="w-full border rounded px-3 py-2"
+                  v-model="themeSettingsDraft.sidebarWidth"
+                  placeholder="e.g. 280px, 20rem"
+                />
+              </div>
+            </div>
+            <div class="bg-white border rounded p-4 space-y-3">
+              <h4 class="text-md font-semibold">Sidebar Builder</h4>
+              <PageBuilder v-model="themeSettingsDraft.sidebarLayout" :locked-cols="1" />
+              <p class="text-xs text-gray-500">Sidebar uses a fixed single column. Add blocks/elements as needed.</p>
+            </div>
             <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
               <div>
                 <label class="text-sm text-gray-700">Padding Top (px)</label>

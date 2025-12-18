@@ -112,4 +112,31 @@ router.get('/repos', async (_req, res) => {
   }
 })
 
+// Public, read-only: used by frontend to render GitLink elements without requiring admin auth
+router.get('/public/repos', async (_req, res) => {
+  try {
+    const token = await getToken()
+    if (!token?.access_token) return res.json([])
+    const { data } = await axios.get('https://api.github.com/user/repos', {
+      headers: { Authorization: `token ${token.access_token}`, Accept: 'application/vnd.github+json' }
+    })
+    res.json(
+      (data || []).map(repo => ({
+        id: repo.id,
+        name: repo.name,
+        full_name: repo.full_name,
+        html_url: repo.html_url,
+        description: repo.description,
+        stargazers_count: repo.stargazers_count,
+        forks_count: repo.forks_count,
+        language: repo.language,
+        updated_at: repo.updated_at
+      }))
+    )
+  } catch (err) {
+    console.error('GitLink public repos error', err.response?.data || err.message)
+    res.status(err.response?.status || 500).json({ error: 'Failed to fetch repos' })
+  }
+})
+
 export default router

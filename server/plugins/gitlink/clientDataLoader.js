@@ -11,13 +11,20 @@ export async function loadContentData(content, layoutJson, { pluginData }) {
   if (hasGithubReposElement || hasGitlinkShortcode) {
     if (!pluginData.value.gitlink?.gitRepos?.length) {
       try {
-        const { data } = await axios.get(`${API_BASE_URL}/api/plugins/gitlink/repos`)
+        const { data } = await axios.get(`${API_BASE_URL}/api/plugins/gitlink/public/repos`)
         if (!pluginData.value.gitlink) pluginData.value.gitlink = {}
         pluginData.value.gitlink.gitRepos = data || []
       } catch (err) {
-        console.error('Failed to fetch GitLink repos', err)
-        if (!pluginData.value.gitlink) pluginData.value.gitlink = {}
-        pluginData.value.gitlink.gitRepos = []
+        console.error('Failed to fetch GitLink repos (public); retrying authenticated route if available', err)
+        try {
+          const { data } = await axios.get(`${API_BASE_URL}/api/plugins/gitlink/repos`)
+          if (!pluginData.value.gitlink) pluginData.value.gitlink = {}
+          pluginData.value.gitlink.gitRepos = data || []
+        } catch (err2) {
+          console.error('Failed to fetch GitLink repos (auth)', err2)
+          if (!pluginData.value.gitlink) pluginData.value.gitlink = {}
+          pluginData.value.gitlink.gitRepos = []
+        }
       }
     }
   }
