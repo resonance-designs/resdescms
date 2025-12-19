@@ -56,6 +56,7 @@ A modern, full-featured CMS built with Vue 3 + Vite, Express.js, and SQLite.
 
 ## Changelog
 ### Latest Updates
+- v0.2.9 (alpha): Reusable media details modal now powers the Media Library with auto-save + explicit save, updated button styling/new-tab download, and media metadata update API; admin About page added and linked from the sidebar logo.
 - v0.2.8 (alpha): Posts/pages editors now use sidebars with author selection, scheduling, and per-instance featured image metadata + modal; media uploads organized by year/month with uploader metadata; auto-logout on expired tokens.
 - v0.2.7 (alpha): Unified pagination across posts/pages/media/users (per-page apply, page jump, first/last arrows); media API paginated; theme management adds single-row color controls plus background image picker with repeat/size/position/attachment presets.
 

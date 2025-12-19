@@ -15,33 +15,33 @@
 
 @font-face {
   font-family: "AvantGarde-Bk";
-  src: url(/fonts/ITCAvantGardeStd-Bk.eot?#iefix) format("embedded-opentype"),
-       url(/fonts/ITCAvantGardeStd-Bk.otf) format("opentype"),
-       url(/fonts/ITCAvantGardeStd-Bk.woff) format("woff"),
-       url(/fonts/ITCAvantGardeStd-Bk.ttf) format("truetype"),
-       url(/fonts/ITCAvantGardeStd-Bk.svg#ITCAvantGardeStd-Bk) format("svg");
+  src:url(/fonts/ITCAvantGardeStd-Bk.eot?#iefix) format("embedded-opentype"),
+      url(/fonts/ITCAvantGardeStd-Bk.otf) format("opentype"),
+      url(/fonts/ITCAvantGardeStd-Bk.woff) format("woff"),
+      url(/fonts/ITCAvantGardeStd-Bk.ttf) format("truetype"),
+      url(/fonts/ITCAvantGardeStd-Bk.svg#ITCAvantGardeStd-Bk) format("svg");
   font-weight: normal;
   font-style: normal;
 }
 
 @font-face {
   font-family: "AvantGarde-Demi";
-  src: url(/fonts/ITCAvantGardeStd-Demi.eot?#iefix) format("embedded-opentype"),
-       url(/fonts/ITCAvantGardeStd-Demi.otf) format("opentype"),
-       url(/fonts/ITCAvantGardeStd-Demi.woff) format("woff"),
-       url(/fonts/ITCAvantGardeStd-Demi.ttf) format("truetype"),
-       url(/fonts/ITCAvantGardeStd-Demi.svg#ITCAvantGardeStd-Demi) format("svg");
+  src:url(/fonts/ITCAvantGardeStd-Demi.eot?#iefix) format("embedded-opentype"),
+      url(/fonts/ITCAvantGardeStd-Demi.otf) format("opentype"),
+      url(/fonts/ITCAvantGardeStd-Demi.woff) format("woff"),
+      url(/fonts/ITCAvantGardeStd-Demi.ttf) format("truetype"),
+      url(/fonts/ITCAvantGardeStd-Demi.svg#ITCAvantGardeStd-Demi) format("svg");
   font-weight: normal;
   font-style: normal;
 }
 
 @font-face {
   font-family: "AvantGarde-Md";
-  src: url(/fonts/ITCAvantGardeStd-Md.eot?#iefix) format("embedded-opentype"),
-       url(/fonts/ITCAvantGardeStd-Md.otf) format("opentype"),
-       url(/fonts/ITCAvantGardeStd-Md.woff) format("woff"),
-       url(/fonts/ITCAvantGardeStd-Md.ttf) format("truetype"),
-       url(/fonts/ITCAvantGardeStd-Md.svg#ITCAvantGardeStd-Md) format("svg");
+  src:url(/fonts/ITCAvantGardeStd-Md.eot?#iefix) format("embedded-opentype"),
+      url(/fonts/ITCAvantGardeStd-Md.otf) format("opentype"),
+      url(/fonts/ITCAvantGardeStd-Md.woff) format("woff"),
+      url(/fonts/ITCAvantGardeStd-Md.ttf) format("truetype"),
+      url(/fonts/ITCAvantGardeStd-Md.svg#ITCAvantGardeStd-Md) format("svg");
   font-weight: normal;
   font-style: normal;
 }
@@ -53,78 +53,10 @@
 html, body {
   margin: 0;
   padding: 0;
+  @apply font-avant-garde;
 }
 
-.rd-btn-orange {
-  background-color: #e06e26;
-  color: white;
-  padding: 0.75rem 1.5rem;
-  border-radius: 0.375rem;
-  transition: all 0.8s;
-}
-
-.rd-btn-orange:hover {
-  background-color: #ff893f;
-}
-
-.rd-arrow-down::after,
-.rd-arrow-right::after {
-  content: "";
-  display: inline-block;
-  width: 0.75rem;
-  height: 0.75rem;
-  border-bottom: 2px solid transparent;
-  border-left: 2px solid transparent;
-  transition: all 0.8s;
-}
-
-.rd-arrow-down::after {
-  transform: rotate(-45deg);
-  margin-left: 0.75rem;
-  margin-top: -0.25rem;
-}
-
-.rd-arrow-right::after {
-  transform: rotate(-135deg);
-  margin-left: 0.5rem;
-  margin-bottom: 0.125rem;
-}
-
-.rd-btn-orange:hover .rd-arrow-down::after {
-  border-bottom-color: white;
-  border-left-color: white;
-}
-
-.rd-cover {
-  position: absolute;
-  width: 91.666667%;
-  height: 91.666667%;
-  background-color: rgba(255, 255, 255, 0);
-  border: 2px solid rgba(0, 0, 0, 0);
-  margin: 0.75rem;
-  padding: 0.75rem;
-  transition: all 0.8s;
-}
-
-.rd-cover h1 {
-  color: rgba(0, 0, 0, 0);
-  margin: 0;
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  transition: all 0.8s;
-}
-
-.rd-portfolio:hover img {
-  filter: blur(2px);
-}
-
-.rd-portfolio:hover .rd-cover {
-  background-color: rgba(255, 255, 255, 0.3);
-  border-color: rgba(0, 0, 0, 1);
-}
-
-.rd-portfolio:hover .rd-cover h1 {
-  color: rgba(0, 0, 0, 1);
+#rd-admin-nav {
+  z-index: 1;
+  box-shadow: -8px 0 14px 14px rgba(0, 0, 0, .6);
 }

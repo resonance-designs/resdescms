@@ -1,11 +1,12 @@
 <script setup>
 import { ref, computed, onMounted, watch } from 'vue'
-import { useRouter, useRoute, RouterLink } from 'vue-router'
+import { useRouter, useRoute } from 'vue-router'
 import { useContentStore } from '../../stores/content'
 import { useAuthStore } from '../../stores/auth'
 import PageBuilder from '../../components/admin/PageBuilder.vue'
 import { resolveMediaUrl } from '../../utils/media'
-import { IconCircleCheck, IconCircleX } from '@tabler/icons-vue'
+import MediaDetailsModal from '../../components/admin/MediaDetailsModal.vue'
+import { IconCircleCheck } from '@tabler/icons-vue'
 import axios from 'axios'
 
 const API_BASE_URL = (import.meta.env.VITE_API_BASE || 'http://localhost:3001').replace(/\/+$/, '')
@@ -38,7 +39,6 @@ const mediaSelection = ref(null)
 const uploading = ref(false)
 const saved = ref(false)
 const featuredModalOpen = ref(false)
-const featuredDimensions = ref({ width: null, height: null })
 
 const layout = ref({
   cols: 4,
@@ -66,6 +66,12 @@ const featuredMedia = computed(() => {
     m => resolveMediaUrl(m.url) === resolveMediaUrl(form.value.featured_image) || m.url === form.value.featured_image
   ) || null
 })
+const featuredFields = computed(() => ({
+  alt: form.value.featured_image_alt || '',
+  title: form.value.featured_image_title || '',
+  caption: form.value.featured_image_caption || '',
+  description: form.value.featured_image_description || ''
+}))
 
 onMounted(async () => {
   if (authStore.user?.id) {
@@ -188,7 +194,6 @@ function applyMediaSelection() {
     form.value.featured_image_title = file.title || ''
     form.value.featured_image_caption = file.caption || ''
     form.value.featured_image_description = file.description || ''
-    featuredDimensions.value = { width: null, height: null }
   }
   closeMediaModal()
 }
@@ -226,33 +231,6 @@ async function fetchUsers() {
 function openFeaturedModal() {
   if (!form.value.featured_image) return
   featuredModalOpen.value = true
-  loadFeaturedDimensions()
-}
-
-function loadFeaturedDimensions() {
-  featuredDimensions.value = { width: null, height: null }
-  if (!form.value.featured_image) return
-  const img = new Image()
-  img.onload = () => {
-    featuredDimensions.value = { width: img.naturalWidth, height: img.naturalHeight }
-  }
-  img.src = resolveMediaUrl(form.value.featured_image)
-}
-
-function copyFileUrl() {
-  const url = resolveMediaUrl(form.value.featured_image)
-  navigator.clipboard?.writeText(url)
-}
-
-function downloadFile() {
-  const url = resolveMediaUrl(form.value.featured_image)
-  const link = document.createElement('a')
-  link.href = url
-  link.target = '_blank'
-  link.download = ''
-  document.body.appendChild(link)
-  link.click()
-  document.body.removeChild(link)
 }
 
 function clearFeaturedImage() {
@@ -261,7 +239,18 @@ function clearFeaturedImage() {
   form.value.featured_image_title = ''
   form.value.featured_image_caption = ''
   form.value.featured_image_description = ''
-  featuredDimensions.value = { width: null, height: null }
+  featuredModalOpen.value = false
+}
+
+function updateFeaturedFields(fields) {
+  form.value.featured_image_alt = fields?.alt || ''
+  form.value.featured_image_title = fields?.title || ''
+  form.value.featured_image_caption = fields?.caption || ''
+  form.value.featured_image_description = fields?.description || ''
+}
+
+function saveFeaturedFields(fields) {
+  updateFeaturedFields(fields)
   featuredModalOpen.value = false
 }
 </script>
@@ -395,53 +384,14 @@ function clearFeaturedImage() {
     </div>
   </div>
 
-  <div v-if="featuredModalOpen" class="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50">
-    <div class="bg-white rounded-lg shadow-xl w-full max-w-5xl max-h-[85vh] overflow-hidden flex flex-col">
-      <div class="px-4 py-3 border-b flex items-center justify-between">
-        <h4 class="text-base font-semibold">Featured Image Details</h4>
-        <button class="text-sm text-gray-600 hover:text-gray-900 cursor-pointer" @click="closeFeaturedModal"><IconCircleX /></button>
-      </div>
-      <div class="flex flex-col lg:flex-row gap-4 p-4 overflow-auto">
-        <div class="flex-1 flex items-center justify-center bg-gray-50 border rounded">
-          <img :src="resolveMediaUrl(form.featured_image)" alt="Featured" class="max-h-[60vh] object-contain">
-        </div>
-        <div class="w-full lg:w-1/2 space-y-3">
-          <div class="grid grid-cols-2 gap-2 text-sm text-gray-700">
-            <div><span class="font-semibold">Uploaded On:</span> {{ featuredMedia?.created_at?.slice(0,10) || '—' }}</div>
-            <div><span class="font-semibold">Uploaded By:</span> {{ featuredMedia?.uploader_name || 'Imported' }}</div>
-            <div><span class="font-semibold">File Name:</span> {{ featuredMedia?.filename || '—' }}</div>
-            <div><span class="font-semibold">File Type:</span> {{ featuredMedia?.mime_type || '—' }}</div>
-            <div><span class="font-semibold">File Size:</span> {{ featuredMedia?.size ? Math.round(featuredMedia.size / 1024) + ' KB' : '—' }}</div>
-            <div><span class="font-semibold">Dimensions:</span> {{ featuredDimensions.width && featuredDimensions.height ? `${featuredDimensions.width} x ${featuredDimensions.height}` : '—' }}</div>
-          </div>
-          <div class="space-y-2">
-            <label class="text-sm font-medium text-gray-700">Alt Attribute</label>
-            <input v-model="form.featured_image_alt" type="text" class="w-full border rounded px-3 py-2">
-          </div>
-          <div class="space-y-2">
-            <label class="text-sm font-medium text-gray-700">Title Attribute</label>
-            <input v-model="form.featured_image_title" type="text" class="w-full border rounded px-3 py-2">
-          </div>
-          <div class="space-y-2">
-            <label class="text-sm font-medium text-gray-700">Caption</label>
-            <textarea v-model="form.featured_image_caption" class="w-full border rounded px-3 py-2" rows="2"></textarea>
-          </div>
-          <div class="space-y-2">
-            <label class="text-sm font-medium text-gray-700">Description</label>
-            <textarea v-model="form.featured_image_description" class="w-full border rounded px-3 py-2" rows="3"></textarea>
-          </div>
-          <div class="space-y-2">
-            <label class="text-sm font-medium text-gray-700">File URL</label>
-            <input :value="resolveMediaUrl(form.featured_image)" readonly class="w-full border rounded px-3 py-2 bg-gray-50 text-sm">
-            <div class="flex gap-2">
-              <button type="button" class="cursor-pointer px-3 py-2 rounded bg-gray-800 hover:bg-gray-700 text-sm text-white" @click="copyFileUrl">Copy URL</button>
-              <button type="button" class="cursor-pointer px-3 py-2 rounded bg-rd-orange hover:bg-rd-orange-light text-sm text-white" @click="downloadFile">Download</button>
-              <button type="button" class="cursor-pointer px-3 py-2 rounded bg-red-600 hover:bg-red-500 text-sm text-white" @click="clearFeaturedImage">Delete</button>
-            </div>
-            <p class="text-xs text-gray-500">Changes here apply to this page only; defaults from the media library are overridden.</p>
-          </div>
-        </div>
-      </div>
-    </div>
-  </div>
+  <MediaDetailsModal
+    :open="featuredModalOpen"
+    :url="form.featured_image"
+    :media="featuredMedia"
+    :fields="featuredFields"
+    @close="closeFeaturedModal"
+    @delete="clearFeaturedImage"
+    @update:fields="updateFeaturedFields"
+    @save="saveFeaturedFields"
+  />
 </template>

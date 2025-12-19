@@ -1,7 +1,12 @@
 # ResDesCMS - Changelog
 
+## v0.2.9 (alpha)
+- Media: reusable media details modal now powers the Media Library with inline auto-save and explicit save; media metadata (alt/title/caption/description) updates via new API endpoint; download opens in new tab and button styling updated.
+- Admin UI: Added About page (`/admin/about`) linked from the sidebar logo with project info and helpful links.
+- Shared: posts/pages continue to use the reusable media modal for featured images; no functional regression to existing metadata fields.
+
 ## v0.2.8 (alpha)
-- Posts/pages: sidebar editors now include author selection, scheduled publish date/time, and per-instance featured image metadata (alt/title/caption/description) with a reusable detail modal; saves stay on the editor with inline “Saved” confirmation.
+- Posts/pages: sidebar editors now include author selection, scheduled publish date/time, and per-instance featured image metadata (alt/title/caption/description) with a reusable detail modal; saves stay on the editor with inline "Saved" confirmation.
 - Media: uploads stored under `/uploads/YYYY/MM`; media records track uploader and metadata; media library selection is used for featured images with previews.
 - Auth: expired/invalid tokens now trigger automatic logout/redirect to the login screen.
 

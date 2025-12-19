@@ -10,6 +10,7 @@ import {
 } from '@tabler/icons-vue'
 import { useContentStore } from '../../stores/content'
 import { resolveMediaUrl } from '../../utils/media'
+import MediaDetailsModal from '../../components/admin/MediaDetailsModal.vue'
 
 const contentStore = useContentStore()
 const media = ref([])
@@ -21,6 +22,10 @@ const pagination = ref({ page: 1, limit: 10, total: 0, pages: 1 })
 const currentPage = ref(1)
 const pageInput = ref(1)
 const perPage = ref(10)
+const mediaModalOpen = ref(false)
+const activeMedia = ref(null)
+const modalFields = ref({ alt: '', title: '', caption: '', description: '' })
+let saveTimer = null
 
 const totalPages = computed(() => pagination.value.pages || 1)
 
@@ -96,6 +101,60 @@ async function deleteMedia(id) {
     await contentStore.deleteMedia(id)
     const nextPage = isLastOnPage && currentPage.value > 1 ? currentPage.value - 1 : currentPage.value
     changePage(nextPage, true)
+    if (activeMedia.value?.id === id) {
+      closeDetails()
+    }
+  }
+}
+
+function openDetails(item) {
+  activeMedia.value = item
+  modalFields.value = {
+    alt: item?.alt_text || '',
+    title: item?.title || '',
+    caption: item?.caption || '',
+    description: item?.description || ''
+  }
+  mediaModalOpen.value = true
+}
+
+function closeDetails() {
+  mediaModalOpen.value = false
+  activeMedia.value = null
+  modalFields.value = { alt: '', title: '', caption: '', description: '' }
+  if (saveTimer) {
+    clearTimeout(saveTimer)
+    saveTimer = null
+  }
+}
+
+function handleFieldChange(fields) {
+  modalFields.value = { ...fields }
+  if (!activeMedia.value?.id) return
+  if (saveTimer) clearTimeout(saveTimer)
+  saveTimer = setTimeout(() => {
+    saveTimer = null
+    saveDetails(fields, false)
+  }, 500)
+}
+
+async function saveDetails(fields, close = true) {
+  if (!activeMedia.value?.id) return
+  const payload = {
+    alt_text: fields?.alt || '',
+    title: fields?.title || '',
+    caption: fields?.caption || '',
+    description: fields?.description || ''
+  }
+  try {
+    const updated = await contentStore.updateMedia(activeMedia.value.id, payload)
+    const idx = media.value.findIndex(m => m.id === activeMedia.value.id)
+    if (idx > -1) media.value[idx] = updated
+    if (close) {
+      closeDetails()
+    }
+  } catch (error) {
+    alert('Failed to save media details: ' + error.message)
   }
 }
 </script>
@@ -144,7 +203,9 @@ async function deleteMedia(id) {
       <div v-else-if="media.length === 0" class="p-6 text-center text-gray-600">No media uploaded yet.</div>
       <div v-else class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4 p-6">
         <div v-for="item in media" :key="item.id" class="relative group">
-          <img :src="resolveMediaUrl(item.url)" :alt="item.filename" class="w-full aspect-square object-cover rounded">
+          <button type="button" class="w-full aspect-square overflow-hidden rounded block" @click="openDetails(item)">
+            <img :src="resolveMediaUrl(item.url)" :alt="item.filename" class="w-full h-full object-cover">
+          </button>
           <button @click="deleteMedia(item.id)" class="absolute top-2 right-2 bg-red-600 text-white p-2 rounded opacity-0 group-hover:opacity-100 transition cursor-pointer flex items-center justify-center">
             <IconTrash :size="14" />
           </button>
@@ -202,4 +263,15 @@ async function deleteMedia(id) {
       </div>
     </div>
   </div>
+
+  <MediaDetailsModal
+    :open="mediaModalOpen"
+    :url="activeMedia?.url || ''"
+    :media="activeMedia"
+    :fields="modalFields"
+    @close="closeDetails"
+    @delete="() => activeMedia?.id && deleteMedia(activeMedia.id)"
+    @update:fields="handleFieldChange"
+    @save="fields => saveDetails(fields, true)"
+  />
 </template>

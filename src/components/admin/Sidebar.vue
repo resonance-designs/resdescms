@@ -74,15 +74,15 @@ onMounted(() => {
 </script>
 
 <template>
-  <div class="w-64 bg-gray-900 text-white p-6">
+  <div id="rd-admin-nav" class="w-64 bg-gray-900 text-white p-6">
     <div class="mb-8">
-      <div class="flex items-center gap-2">
+      <RouterLink to="/admin/about" class="flex items-center gap-2 cursor-pointer hover:text-rd-orange transition">
         <img src="/img/icon.png" alt="ResDesCMS" class="w-12 h-12 rounded" />
         <div>
           <h1 class="text-2xl font-avant-garde-demi">ResDesCMS</h1>
           <p class="text-sm text-gray-400 leading-tight">Admin</p>
         </div>
-      </div>
+      </RouterLink>
     </div>
 
     <nav class="flex flex-col">

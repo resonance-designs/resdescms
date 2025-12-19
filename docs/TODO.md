@@ -20,7 +20,7 @@
       - [x] Button: Download File
       - [x] Button: Delete
       - [x] The saved fields are unique for that specific instance of the image on this specific page. Any global settings for the image set in the Media Library will be overwritten for this instance. If no changes were made to any field, it will use the default values set in the Media Library.
-      - [ ] Media download should open in new tab/window.
+      - [x] Media download should open in new tab/window.
     - [x] Modal should have a close button in top right corner.
     - [x] This modal implementation for media should be reusable so it can be used throughout the CMS.
   - [x] Move "Title" above "Page Builder"
@@ -31,4 +31,4 @@
     - [x] Use featured image modal as defined in Create/Edit Page.
   - [x] Remove "Cancel" button.
   - [x] Move "Title" above "Excerpt"
-- [ ] Move Media Library Modal into its own component.
+- [x] Move Media Library Modal into its own component.

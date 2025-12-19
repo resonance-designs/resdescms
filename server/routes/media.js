@@ -127,4 +127,30 @@ router.delete('/:id', authenticateToken, async (req, res) => {
   }
 })
 
+router.put('/:id', authenticateToken, async (req, res) => {
+  try {
+    const media = await db.get('SELECT * FROM rdcms_media WHERE id = ?', [req.params.id])
+    if (!media) return res.status(404).json({ error: 'Media not found' })
+
+    const { alt_text = '', title = '', caption = '', description = '' } = req.body || {}
+    await db.run(
+      `UPDATE rdcms_media
+       SET alt_text = ?, title = ?, caption = ?, description = ?
+       WHERE id = ?`,
+      [alt_text, title, caption, description, req.params.id]
+    )
+
+    const updated = await db.get(
+      `SELECT m.*, u.username as uploader_name
+       FROM rdcms_media m
+       LEFT JOIN rdcms_users u ON m.uploaded_by = u.id
+       WHERE m.id = ?`,
+      [req.params.id]
+    )
+    res.json(updated)
+  } catch (error) {
+    res.status(500).json({ error: error.message })
+  }
+})
+
 export default router

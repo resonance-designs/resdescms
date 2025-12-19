@@ -209,6 +209,20 @@ export const useContentStore = defineStore('content', () => {
     }
   }
 
+  async function updateMedia(id, payload) {
+    try {
+      const response = await axios.put(`${API_BASE_URL}/api/media/${id}`, payload)
+      const index = media.value.findIndex(m => m.id === id)
+      if (index > -1) {
+        media.value[index] = response.data
+      }
+      return response.data
+    } catch (error) {
+      console.error('Failed to update media:', error)
+      throw error
+    }
+  }
+
   async function deleteMedia(id) {
     try {
       await axios.delete(`${API_BASE_URL}/api/media/${id}`)
@@ -345,6 +359,7 @@ export const useContentStore = defineStore('content', () => {
     deleteCategory,
     fetchMedia,
     uploadMedia,
+    updateMedia,
     deleteMedia,
     fetchNavigationMenus,
     createNavigationMenu,
