@@ -1,5 +1,5 @@
 # ResDesCMS
-Version: **alpha** | Latest release: v0.2.7
+Version: **alpha** | Latest release: v0.2.8
 
 ## About
 A modern, full-featured CMS built with Vue 3 + Vite, Express.js, and SQLite.
@@ -56,7 +56,7 @@ A modern, full-featured CMS built with Vue 3 + Vite, Express.js, and SQLite.
 
 ## Changelog
 ### Latest Updates
+- v0.2.8 (alpha): Posts/pages editors now use sidebars with author selection, scheduling, and per-instance featured image metadata + modal; media uploads organized by year/month with uploader metadata; auto-logout on expired tokens.
 - v0.2.7 (alpha): Unified pagination across posts/pages/media/users (per-page apply, page jump, first/last arrows); media API paginated; theme management adds single-row color controls plus background image picker with repeat/size/position/attachment presets.
-- v0.2.6 (alpha): Admin polish with iconized controls; categories made global for posts/pages.
 
 See [docs/CHANGELOG.md](docs/CHANGELOG.md) for full update logs.

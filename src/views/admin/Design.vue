@@ -402,7 +402,7 @@ function updateThemeSetting(key, value) {
                 <div>
                   <label class="block text-sm font-medium text-gray-700 mb-1">Site Logo</label>
                   <div class="flex gap-2">
-                    <input v-model="design.logoUrl" type="url" class="w-full px-3 py-2 border border-gray-300 rounded" placeholder="https://...">
+                    <input v-model="design.logoUrl" type="text" class="w-full px-3 py-2 border border-gray-300 rounded" placeholder="https://... or /uploads/...">
                     <button type="button" class="px-3 py-2 bg-gray-800 text-white rounded cursor-pointer flex items-center gap-2" @click="openMediaModal('logoUrl')">
                       <IconPhoto :size="16" />
                       <span>Library</span>
@@ -420,7 +420,7 @@ function updateThemeSetting(key, value) {
                 <div>
                   <label class="block text-sm font-medium text-gray-700 mb-1">Favicon</label>
                   <div class="flex gap-2">
-                    <input v-model="design.faviconUrl" type="url" class="w-full px-3 py-2 border border-gray-300 rounded" placeholder="https://...">
+                    <input v-model="design.faviconUrl" type="text" class="w-full px-3 py-2 border border-gray-300 rounded" placeholder="https://... or /uploads/...">
                     <button type="button" class="px-3 py-2 bg-gray-800 text-white rounded cursor-pointer flex items-center gap-2" @click="openMediaModal('faviconUrl')">
                       <IconPhoto :size="16" />
                       <span>Library</span>
@@ -551,7 +551,7 @@ function updateThemeSetting(key, value) {
                 class="bg-rd-orange text-white px-4 py-2 rounded hover:bg-rd-orange-light transition cursor-pointer flex items-center gap-2"
                 @click="activateTheme(theme.slug)"
             >
-              <IconSettings :size="16" />
+              <IconSettings2 :size="16" />
               <span>Activate</span>
             </button>
           </div>

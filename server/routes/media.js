@@ -15,7 +15,14 @@ if (!fs.existsSync(uploadsDir)) {
 
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
-    cb(null, uploadsDir)
+    const now = new Date()
+    const year = `${now.getFullYear()}`
+    const month = `${now.getMonth() + 1}`.padStart(2, '0')
+    const targetDir = path.join(uploadsDir, year, month)
+    if (!fs.existsSync(targetDir)) {
+      fs.mkdirSync(targetDir, { recursive: true })
+    }
+    cb(null, targetDir)
   },
   filename: (req, file, cb) => {
     const ext = path.extname(file.originalname)
@@ -35,7 +42,12 @@ router.get('/', async (req, res) => {
     const paginate = typeof limitParam !== 'undefined' || typeof pageParam !== 'undefined'
 
     if (!paginate || limitParam === 'all') {
-      const media = await db.all('SELECT * FROM rdcms_media ORDER BY created_at DESC')
+      const media = await db.all(`
+        SELECT m.*, u.username as uploader_name
+        FROM rdcms_media m
+        LEFT JOIN rdcms_users u ON m.uploaded_by = u.id
+        ORDER BY m.created_at DESC
+      `)
       const total = media.length
       return res.json({
         data: media,
@@ -49,7 +61,13 @@ router.get('/', async (req, res) => {
 
     const totalRow = await db.get('SELECT COUNT(*) as count FROM rdcms_media')
     const media = await db.all(
-      'SELECT * FROM rdcms_media ORDER BY created_at DESC LIMIT ? OFFSET ?',
+      `
+        SELECT m.*, u.username as uploader_name
+        FROM rdcms_media m
+        LEFT JOIN rdcms_users u ON m.uploaded_by = u.id
+        ORDER BY m.created_at DESC
+        LIMIT ? OFFSET ?
+      `,
       [limit, offset]
     )
 
@@ -70,16 +88,22 @@ router.post('/upload', authenticateToken, upload.single('file'), async (req, res
     }
 
     const result = await db.run(
-      'INSERT INTO rdcms_media (filename, url, mime_type, size) VALUES (?, ?, ?, ?)',
+      'INSERT INTO rdcms_media (filename, url, mime_type, size, uploaded_by) VALUES (?, ?, ?, ?, ?)',
       [
-        req.file.filename,
-        `/uploads/${req.file.filename}`,
+        path.relative(uploadsDir, path.join(req.file.destination, req.file.filename)).replace(/\\/g, '/'),
+        `/uploads/${path.relative(uploadsDir, path.join(req.file.destination, req.file.filename)).replace(/\\/g, '/')}`,
         req.file.mimetype,
-        req.file.size
+        req.file.size,
+        req.user?.id || null
       ]
     )
 
-    const media = await db.get('SELECT * FROM rdcms_media WHERE id = ?', [result.lastID])
+    const media = await db.get(`
+      SELECT m.*, u.username as uploader_name
+      FROM rdcms_media m
+      LEFT JOIN rdcms_users u ON m.uploaded_by = u.id
+      WHERE m.id = ?
+    `, [result.lastID])
     res.json(media)
   } catch (error) {
     res.status(500).json({ error: error.message })

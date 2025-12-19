@@ -1,4 +1,4 @@
-# Resonance Designs CMS - Setup & Running Guide
+# ResDesCMS - Setup & Running Guide
 
 ## Overview
 

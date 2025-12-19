@@ -1,4 +1,4 @@
-# Theme Development Guide (ResDesCMS)
+# ResDesCMS - Theme Development Guide
 
 This guide explains how to build and package themes for ResDesCMS.
 

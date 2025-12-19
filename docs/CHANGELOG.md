@@ -1,4 +1,9 @@
-# Changelog
+# ResDesCMS - Changelog
+
+## v0.2.8 (alpha)
+- Posts/pages: sidebar editors now include author selection, scheduled publish date/time, and per-instance featured image metadata (alt/title/caption/description) with a reusable detail modal; saves stay on the editor with inline “Saved” confirmation.
+- Media: uploads stored under `/uploads/YYYY/MM`; media records track uploader and metadata; media library selection is used for featured images with previews.
+- Auth: expired/invalid tokens now trigger automatic logout/redirect to the login screen.
 
 ## v0.2.7 (alpha)
 - Admin lists: unified pagination with per-page controls, numeric page jump, and first/last arrows across posts, pages, media, and users; media endpoint now paginated.

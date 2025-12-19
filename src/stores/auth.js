@@ -6,6 +6,30 @@ export const useAuthStore = defineStore('auth', () => {
   const token = ref(localStorage.getItem('token') || null)
   const user = ref(null)
   const isAuthenticated = computed(() => !!token.value)
+  let interceptorId = null
+
+  const setAuthHeader = (val) => {
+    if (val) {
+      axios.defaults.headers.common['Authorization'] = `Bearer ${val}`
+    } else {
+      delete axios.defaults.headers.common['Authorization']
+    }
+  }
+
+  const ensureInterceptor = () => {
+    if (interceptorId !== null) return
+    interceptorId = axios.interceptors.response.use(
+      (response) => response,
+      (error) => {
+        const status = error?.response?.status
+        if (status === 401) {
+          logout(false)
+          window.location.href = '/admin/login'
+        }
+        return Promise.reject(error)
+      }
+    )
+  }
 
   async function login(username, password) {
     try {
@@ -13,7 +37,8 @@ export const useAuthStore = defineStore('auth', () => {
       token.value = response.data.token
       user.value = response.data.user
       localStorage.setItem('token', token.value)
-      axios.defaults.headers.common['Authorization'] = `Bearer ${token.value}`
+      setAuthHeader(token.value)
+      ensureInterceptor()
       return true
     } catch (error) {
       console.error('Login failed:', error)
@@ -21,15 +46,19 @@ export const useAuthStore = defineStore('auth', () => {
     }
   }
 
-  function logout() {
+  function logout(redirect = true) {
     token.value = null
     user.value = null
     localStorage.removeItem('token')
-    delete axios.defaults.headers.common['Authorization']
+    setAuthHeader(null)
+    if (redirect) {
+      window.location.href = '/admin/login'
+    }
   }
 
   if (token.value) {
-    axios.defaults.headers.common['Authorization'] = `Bearer ${token.value}`
+    setAuthHeader(token.value)
+    ensureInterceptor()
   }
 
   return {
