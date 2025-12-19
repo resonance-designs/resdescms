@@ -76,9 +76,16 @@ function createTables() {
       category_id INTEGER,
       post_type TEXT DEFAULT 'post',
       published INTEGER DEFAULT 0,
+      author_id INTEGER,
+      publish_at DATETIME,
+      featured_image_alt TEXT,
+      featured_image_title TEXT,
+      featured_image_caption TEXT,
+      featured_image_description TEXT,
       created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
       updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-      FOREIGN KEY (category_id) REFERENCES rdcms_categories(id)
+      FOREIGN KEY (category_id) REFERENCES rdcms_categories(id),
+      FOREIGN KEY (author_id) REFERENCES rdcms_users(id)
     )
   `, (err) => {
     if (err) console.error('Error creating posts table:', err)
@@ -92,11 +99,20 @@ function createTables() {
       content TEXT,
       featured_image TEXT,
       category_id INTEGER,
+      author_id INTEGER,
+      parent_id INTEGER,
       published INTEGER DEFAULT 0,
+      publish_at DATETIME,
+      featured_image_alt TEXT,
+      featured_image_title TEXT,
+      featured_image_caption TEXT,
+      featured_image_description TEXT,
       created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
       updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
       layout_json TEXT,
-      FOREIGN KEY (category_id) REFERENCES rdcms_categories(id)
+      FOREIGN KEY (category_id) REFERENCES rdcms_categories(id),
+      FOREIGN KEY (author_id) REFERENCES rdcms_users(id),
+      FOREIGN KEY (parent_id) REFERENCES rdcms_pages(id)
     )
   `, (err) => {
     if (err) console.error('Error creating pages table:', err)
@@ -109,7 +125,13 @@ function createTables() {
       url TEXT NOT NULL,
       mime_type TEXT,
       size INTEGER,
-      created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+      uploaded_by INTEGER,
+      alt_text TEXT,
+      title TEXT,
+      caption TEXT,
+      description TEXT,
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+      FOREIGN KEY (uploaded_by) REFERENCES rdcms_users(id)
     )
   `, (err) => {
     if (err) console.error('Error creating media table:', err)
@@ -253,10 +275,39 @@ function migrateLegacyTables() {
 }
 
 function addMissingColumns() {
-  // Plugin-specific table modifications are now handled by each plugin's install.js
-  // This ensures plugins are truly self-contained
-}
+  const ensureColumn = (table, column, definition) => {
+    db.all(`PRAGMA table_info(${table})`, (err, rows) => {
+      if (err || !rows || !Array.isArray(rows)) return
+      const hasColumn = rows.some(r => r.name === column)
+      if (!hasColumn) {
+        db.run(`ALTER TABLE ${table} ADD COLUMN ${column} ${definition}`, (alterErr) => {
+          if (alterErr) console.error(`Error adding column ${column} to ${table}:`, alterErr)
+        })
+      }
+    })
+  }
 
+  ensureColumn('rdcms_pages', 'author_id', 'INTEGER')
+  ensureColumn('rdcms_pages', 'parent_id', 'INTEGER')
+  ensureColumn('rdcms_pages', 'publish_at', 'DATETIME')
+  ensureColumn('rdcms_pages', 'featured_image_alt', 'TEXT')
+  ensureColumn('rdcms_pages', 'featured_image_title', 'TEXT')
+  ensureColumn('rdcms_pages', 'featured_image_caption', 'TEXT')
+  ensureColumn('rdcms_pages', 'featured_image_description', 'TEXT')
+
+  ensureColumn('rdcms_media', 'uploaded_by', 'INTEGER')
+  ensureColumn('rdcms_media', 'alt_text', 'TEXT')
+  ensureColumn('rdcms_media', 'title', 'TEXT')
+  ensureColumn('rdcms_media', 'caption', 'TEXT')
+  ensureColumn('rdcms_media', 'description', 'TEXT')
+
+  ensureColumn('rdcms_posts', 'author_id', 'INTEGER')
+  ensureColumn('rdcms_posts', 'publish_at', 'DATETIME')
+  ensureColumn('rdcms_posts', 'featured_image_alt', 'TEXT')
+  ensureColumn('rdcms_posts', 'featured_image_title', 'TEXT')
+  ensureColumn('rdcms_posts', 'featured_image_caption', 'TEXT')
+  ensureColumn('rdcms_posts', 'featured_image_description', 'TEXT')
+}
 function seedDefaults() {
   const defaultPosts = [
     { title: 'Welcome to ResDesCMS', slug: 'welcome-to-resdescms', excerpt: 'A starter post to demo the platform.', content: '<p>This is your new CMS. Edit or delete this post from the admin.</p>', featured_image: null },
@@ -293,6 +344,8 @@ function seedDefaults() {
       }
     })
   })
+
+  seedPlaceholderPosts(20)
 
   defaultPages.forEach(page => {
     db.get('SELECT id FROM rdcms_pages WHERE slug = ?', [page.slug], (err, row) => {
@@ -358,6 +411,29 @@ function seedNavigationMenus() {
   ensureDefaultMenu()
 }
 
+function seedPlaceholderPosts(count) {
+  const placeholders = Array.from({ length: count }, (_, idx) => ({
+    title: `Placeholder Post ${idx + 1}`,
+    slug: `placeholder-post-${idx + 1}`,
+    excerpt: 'Demo placeholder content for pagination testing.',
+    content: `<p>This is placeholder post ${idx + 1} created for pagination samples.</p>`,
+    featured_image: null
+  }))
+
+  placeholders.forEach(post => {
+    db.get('SELECT id FROM rdcms_posts WHERE slug = ?', [post.slug], (err, row) => {
+      if (err) return console.error('Error checking placeholder post:', err)
+      if (!row) {
+        db.run(
+          `INSERT INTO rdcms_posts (title, slug, content, excerpt, featured_image, post_type, published) VALUES (?, ?, ?, ?, ?, 'post', 1)`,
+          [post.title, post.slug, post.content, post.excerpt, post.featured_image],
+          (insertErr) => insertErr && console.error('Error seeding placeholder post:', insertErr)
+        )
+      }
+    })
+  })
+}
+
 export function run(sql, params = []) {
   return new Promise((resolve, reject) => {
     db.run(sql, params, function(err) {
@@ -386,3 +462,4 @@ export function all(sql, params = []) {
 }
 
 export default { ensureTablesExist, run, get, all }
+

@@ -25,10 +25,11 @@ router.get('/', async (req, res) => {
 
 router.post('/', authenticateToken, async (req, res) => {
   try {
-    const { name, slug, description, type } = req.body
+    const { name, slug, description } = req.body
+    const type = req.body.type || 'general'
 
-    if (!name || !slug || !type) {
-      return res.status(400).json({ error: 'Name, slug, and type are required' })
+    if (!name || !slug) {
+      return res.status(400).json({ error: 'Name and slug are required' })
     }
 
     const result = await db.run(
@@ -45,7 +46,8 @@ router.post('/', authenticateToken, async (req, res) => {
 
 router.put('/:id', authenticateToken, async (req, res) => {
   try {
-    const { name, slug, description, type } = req.body
+    const { name, slug, description } = req.body
+    const type = req.body.type || 'general'
 
     await db.run(
       'UPDATE rdcms_categories SET name = ?, slug = ?, description = ?, type = ? WHERE id = ?',

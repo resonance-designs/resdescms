@@ -4,8 +4,7 @@ import { useAuthStore } from '../stores/auth'
 const routes = [
   {
     path: '/',
-    name: 'home',
-    component: () => import('../views/Home.vue')
+    redirect: '/page/posts'
   },
   {
     path: '/page/:slug',
@@ -104,6 +103,12 @@ const routes = [
         path: 'plugins',
         name: 'admin-plugins',
         component: () => import('../views/admin/Plugins.vue'),
+        meta: { requiresAuth: true }
+      },
+      {
+        path: 'about',
+        name: 'admin-about',
+        component: () => import('../views/admin/About.vue'),
         meta: { requiresAuth: true }
       },
       {

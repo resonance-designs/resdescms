@@ -1,4 +1,4 @@
-# Theme Development Guide (ResDesCMS)
+# ResDesCMS - Theme Development Guide
 
 This guide explains how to build and package themes for ResDesCMS.
 
@@ -11,13 +11,46 @@ This guide explains how to build and package themes for ResDesCMS.
 Example `functions.js`:
 
 ```js
-export default {  name: 'My Theme',  slug: 'my-theme',  version: '1.0.0',  author: 'You',  description: 'A custom theme',  style: 'style.css',  settingsSchema: [    { key: 'primaryColor', label: 'Primary Color', type: 'color', default: '#e06e26' },    { key: 'maxWidth', label: 'Content Max Width (px)', type: 'number', default: 1200 }    // add your own fields  ],  defaultSettings: {    primaryColor: '#e06e26',    maxWidth: 1200  }}
+export default {
+  name: 'My Theme',
+  slug: 'my-theme',
+  version: '1.0.0',
+  author: 'You',
+  description: 'A custom theme',
+  style: 'style.css',
+  settingsSchema: [
+    { key: 'primaryColor', label: 'Primary Color', type: 'color', default: '#e06e26' },
+    { key: 'accentColor', label: 'Accent Color', type: 'color', default: '#1B998B' },
+    { key: 'textColor', label: 'Text Color', type: 'color', default: '#111827' },
+    { key: 'backgroundColor', label: 'Background Color', type: 'color', default: '#ffffff' },
+    { key: 'backgroundImage', label: 'Background Image URL', type: 'text', default: '' },
+    { key: 'backgroundRepeat', label: 'Background Repeat', type: 'select', options: ['no-repeat','repeat','repeat-x','repeat-y'], default: 'no-repeat' },
+    { key: 'backgroundSize', label: 'Background Size', type: 'select', options: ['cover','contain','auto'], default: 'cover' },
+    { key: 'backgroundPosition', label: 'Background Position', type: 'select', options: ['center center','center top','center bottom','left center','right center','left top','right top','left bottom','right bottom'], default: 'center center' },
+    { key: 'backgroundAttachment', label: 'Background Attachment', type: 'select', options: ['scroll','fixed','local'], default: 'scroll' },
+    { key: 'maxWidth', label: 'Content Max Width (px)', type: 'number', default: 1200 }
+    // add your own fields
+  ],
+  defaultSettings: {
+    primaryColor: '#e06e26',
+    accentColor: '#1B998B',
+    textColor: '#111827',
+    backgroundColor: '#ffffff',
+    backgroundImage: '',
+    backgroundRepeat: 'no-repeat',
+    backgroundSize: 'cover',
+    backgroundPosition: 'center center',
+    backgroundAttachment: 'scroll',
+    maxWidth: 1200
+  }
+}
 ```
 
 ## Settings
 
 -   Keys defined in `settingsSchema` + `defaultSettings` are persisted in the DB and exposed as CSS variables `--theme-<key>` and `--theme-<kebab-key>` on the document root.
 -   Common settings in the starter theme: colors, max width, per-section padding/margin, border size/style/color, per-corner radii, header/footer/sidebar toggles and layouts.
+-   Global background support: background image URL plus repeat/size/position/attachment map to CSS `background-*` on the page container.
 -   You can add custom fields (text/number/color/select/textarea); they appear under **Admin → Design → Theme → Management** (for global settings) or the section tabs if you re-use the same keys.
 
 ## Layouts

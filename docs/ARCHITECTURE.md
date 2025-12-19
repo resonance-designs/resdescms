@@ -1,4 +1,4 @@
-# ResDesCMS Architecture
+# ResDesCMS - Architecture
 
 ## Overview
 

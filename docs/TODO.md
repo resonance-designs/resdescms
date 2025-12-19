@@ -1,0 +1,34 @@
+# ResDesCMS - TODO
+
+- [x] Refine Create/Edit Page
+  - [x] Reduce font size of "Choose from Library" and "Upload Image" buttons.
+  - [x] Create modal that opens when you click on the featured image.
+    - [x] Modal should display the image in large format.
+    - [x] To the right of the image, it should display the following:
+      - [x] Uploaded On Date: YYYY-MM-DD
+      - [x] Uploaded By: Author Name. If there is no auther (it was imported), then say "Imported" instead.
+      - [x] File Name: Filename with extension
+      - [x] File Type: MIME type
+      - [x] File Size: Human readable file size
+      - [x] Dimensions: Width x Height
+      - [x] Field: Alt Attribute
+      - [x] Field: Title Attribute
+      - [x] Field: Caption
+      - [x] Field: Description
+      - [x] Field: File URL (not editable)
+      - [x] Button: Copy File URL
+      - [x] Button: Download File
+      - [x] Button: Delete
+      - [x] The saved fields are unique for that specific instance of the image on this specific page. Any global settings for the image set in the Media Library will be overwritten for this instance. If no changes were made to any field, it will use the default values set in the Media Library.
+      - [x] Media download should open in new tab/window.
+    - [x] Modal should have a close button in top right corner.
+    - [x] This modal implementation for media should be reusable so it can be used throughout the CMS.
+  - [x] Move "Title" above "Page Builder"
+- [x] Refine Create/Edit Post
+  - [x] Reduce font size of "Choose from Library" and "Upload Image" buttons.
+  - [x] Add sidebar to the right side of the main content editor area.
+    - [x] Move Title, Slug, Featured Image, Category, Author, and Publish At fields.
+    - [x] Use featured image modal as defined in Create/Edit Page.
+  - [x] Remove "Cancel" button.
+  - [x] Move "Title" above "Excerpt"
+- [x] Move Media Library Modal into its own component.

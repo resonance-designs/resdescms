@@ -94,6 +94,7 @@ const maxWidth = computed(() => {
 })
 const containerPadding = computed(() => spacingBox('containerPadding', '0px'))
 const containerMargin = computed(() => spacingBox('containerMargin', '0px'))
+const containerBorder = computed(() => borderBox('container'))
 const headerPadding = computed(() => spacingBox('headerPadding', '16px'))
 const headerMargin = computed(() => spacingBox('headerMargin', '0px'))
 const footerPadding = computed(() => spacingBox('footerPadding', '16px'))
@@ -179,7 +180,10 @@ function borderBox(prefix) {
 
 <template>
   <div class="min-h-screen bg-gray-50">
-    <div class="mx-auto px-4 py-12" :style="{ maxWidth: maxWidth, padding: containerPadding, margin: containerMargin }">
+    <div
+      class="mx-auto px-4 py-12"
+      :style="{ maxWidth: maxWidth, padding: containerPadding, margin: containerMargin, ...containerBorder }"
+    >
 
       <div v-if="post" class="space-y-6">
         <div v-if="showHeader && hasBlocks(headerLayout)" class="bg-white rounded-lg shadow-md" :style="{ padding: headerPadding, margin: headerMargin }">

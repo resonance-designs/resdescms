@@ -1,6 +1,9 @@
 <script setup>
-import { ref } from 'vue'
+import { ref, onMounted } from 'vue'
+import { useContentStore } from '../../stores/content'
 
+const contentStore = useContentStore()
+const pages = ref([])
 const settings = ref({
   site_title: 'Resonance Designs',
   site_description: 'Web Design & Development',
@@ -8,6 +11,11 @@ const settings = ref({
   contact_phone: '716.220.7618',
   theme: 'default',
   home_page_slug: 'posts'
+})
+
+onMounted(async () => {
+  await contentStore.fetchPages()
+  pages.value = contentStore.pages
 })
 
 function saveSettings() {
@@ -58,9 +66,12 @@ function resetAdminPassword() {
         </div>
 
         <div>
-          <label class="block text-sm font-medium text-gray-900 mb-2">Home Page Slug</label>
-          <input v-model="settings.home_page_slug" type="text" class="w-full px-4 py-2 border rounded" placeholder="posts">
-          <p class="text-xs text-gray-500">Slug of the page rendered at /. Overrides any theme default.</p>
+          <label class="block text-sm font-medium text-gray-900 mb-2">Home Page</label>
+          <select v-model="settings.home_page_slug" class="w-full px-4 py-2 border rounded">
+            <option value="posts">Posts Index (default)</option>
+            <option v-for="page in pages" :key="page.id" :value="page.slug">{{ page.title || page.slug }}</option>
+          </select>
+          <p class="text-xs text-gray-500">Choose which page renders at /. Defaults to the posts index.</p>
         </div>
 
         <div class="flex gap-4">
