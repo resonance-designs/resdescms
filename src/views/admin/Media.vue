@@ -6,7 +6,8 @@ import {
   IconChevronLeft,
   IconChevronRight,
   IconChevronLeftPipe,
-  IconChevronRightPipe
+  IconChevronRightPipe,
+  IconSearch
 } from '@tabler/icons-vue'
 import { useContentStore } from '../../stores/content'
 import { resolveMediaUrl } from '../../utils/media'
@@ -22,6 +23,7 @@ const pagination = ref({ page: 1, limit: 10, total: 0, pages: 1 })
 const currentPage = ref(1)
 const pageInput = ref(1)
 const perPage = ref(10)
+const searchQuery = ref('')
 const mediaModalOpen = ref(false)
 const activeMedia = ref(null)
 const modalFields = ref({ alt: '', title: '', caption: '', description: '' })
@@ -31,7 +33,11 @@ const totalPages = computed(() => pagination.value.pages || 1)
 
 async function loadMedia(page = 1) {
   loading.value = true
-  await contentStore.fetchMedia({ page, limit: perPage.value })
+  await contentStore.fetchMedia({ 
+    page, 
+    limit: perPage.value,
+    search: searchQuery.value
+  })
   media.value = contentStore.media
   pagination.value = contentStore.mediaPagination
   currentPage.value = pagination.value.page
@@ -56,6 +62,11 @@ function triggerFilePicker() {
 function applyPerPage() {
   const parsed = parseInt(perPage.value, 10)
   perPage.value = parsed > 0 ? parsed : 10
+  changePage(1, true)
+}
+
+function handleSearch() {
+  pageInput.value = 1
   changePage(1, true)
 }
 
@@ -178,6 +189,19 @@ async function saveDetails(fields, close = true) {
           >
             Apply
           </button>
+        </div>
+
+        <div class="relative w-full md:w-64 mt-3 md:mt-0">
+          <span class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-gray-400">
+            <IconSearch size="18" />
+          </span>
+          <input
+            v-model="searchQuery"
+            type="text"
+            placeholder="Search media..."
+            class="block w-full pl-10 pr-3 py-2 border rounded bg-white focus:ring-rd-orange focus:border-rd-orange"
+            @keyup.enter="handleSearch"
+          >
         </div>
       </div>
       <div class="bg-white rounded-lg shadow-md p-4 flex items-center gap-3 w-full md:w-auto">

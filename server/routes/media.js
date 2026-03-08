@@ -39,15 +39,24 @@ router.get('/', async (req, res) => {
   try {
     const limitParam = req.query.limit
     const pageParam = req.query.page
+    const search = req.query.search
     const paginate = typeof limitParam !== 'undefined' || typeof pageParam !== 'undefined'
+
+    let whereClause = ''
+    let params = []
+    if (search) {
+      whereClause = ' WHERE m.filename LIKE ? OR m.title LIKE ? OR m.alt_text LIKE ? '
+      params = [`%${search}%`, `%${search}%`, `%${search}%`]
+    }
 
     if (!paginate || limitParam === 'all') {
       const media = await db.all(`
         SELECT m.*, u.username as uploader_name
         FROM rdcms_media m
         LEFT JOIN rdcms_users u ON m.uploaded_by = u.id
+        ${whereClause}
         ORDER BY m.created_at DESC
-      `)
+      `, params)
       const total = media.length
       return res.json({
         data: media,
@@ -59,16 +68,17 @@ router.get('/', async (req, res) => {
     const limit = Math.max(parseInt(limitParam, 10) || 10, 1)
     const offset = (page - 1) * limit
 
-    const totalRow = await db.get('SELECT COUNT(*) as count FROM rdcms_media')
+    const totalRow = await db.get(`SELECT COUNT(*) as count FROM rdcms_media m ${whereClause}`, params)
     const media = await db.all(
       `
         SELECT m.*, u.username as uploader_name
         FROM rdcms_media m
         LEFT JOIN rdcms_users u ON m.uploaded_by = u.id
+        ${whereClause}
         ORDER BY m.created_at DESC
         LIMIT ? OFFSET ?
       `,
-      [limit, offset]
+      [...params, limit, offset]
     )
 
     const total = totalRow?.count || 0

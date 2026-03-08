@@ -43,15 +43,24 @@ router.get('/', async (req, res) => {
     await autoPublishScheduledPosts()
     const limitParam = req.query.limit
     const pageParam = req.query.page
+    const search = req.query.search
     const paginate = typeof limitParam !== 'undefined' || typeof pageParam !== 'undefined'
+
+    let whereClause = ''
+    let params = []
+    if (search) {
+      whereClause = ' WHERE p.title LIKE ? OR p.content LIKE ? '
+      params = [`%${search}%`, `%${search}%`]
+    }
 
     if (!paginate || limitParam === 'all') {
       const posts = await db.all(`
         SELECT p.*, c.name as category_name, u.username as author_name FROM rdcms_posts p
         LEFT JOIN rdcms_categories c ON p.category_id = c.id
         LEFT JOIN rdcms_users u ON p.author_id = u.id
+        ${whereClause}
         ORDER BY p.created_at DESC
-      `)
+      `, params)
 
       const data = await attachMeta(posts)
       const total = data.length
@@ -70,14 +79,15 @@ router.get('/', async (req, res) => {
     const limit = Math.max(parseInt(limitParam, 10) || 10, 1)
     const offset = (page - 1) * limit
 
-    const totalRow = await db.get('SELECT COUNT(*) as count FROM rdcms_posts')
+    const totalRow = await db.get(`SELECT COUNT(*) as count FROM rdcms_posts p ${whereClause}`, params)
     const posts = await db.all(`
       SELECT p.*, c.name as category_name, u.username as author_name FROM rdcms_posts p
       LEFT JOIN rdcms_categories c ON p.category_id = c.id
       LEFT JOIN rdcms_users u ON p.author_id = u.id
+      ${whereClause}
       ORDER BY p.created_at DESC
       LIMIT ? OFFSET ?
-    `, [limit, offset])
+    `, [...params, limit, offset])
 
     const data = await attachMeta(posts)
     const total = totalRow?.count || 0
@@ -145,7 +155,10 @@ router.post('/', authenticateToken, async (req, res) => {
       post_type,
       meta,
       author_id,
-      publish_at
+      publish_at,
+      seo_title,
+      seo_description,
+      seo_keywords
     } = req.body
 
     if (!title || !slug) {
@@ -158,8 +171,8 @@ router.post('/', authenticateToken, async (req, res) => {
     const result = await db.run(
       `INSERT INTO rdcms_posts
         (title, slug, content, excerpt, featured_image, featured_image_alt, featured_image_title, featured_image_caption, featured_image_description,
-         category_id, post_type, published, author_id, publish_at)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+         category_id, post_type, published, author_id, publish_at, seo_title, seo_description, seo_keywords)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       [
         title,
         slug,
@@ -174,7 +187,10 @@ router.post('/', authenticateToken, async (req, res) => {
         post_type || 'post',
         publishValue ? 1 : 0,
         author_id || req.user?.id || null,
-        publish_at || null
+        publish_at || null,
+        seo_title || null,
+        seo_description || null,
+        seo_keywords || null
       ]
     )
 
@@ -223,7 +239,10 @@ router.put('/:id', authenticateToken, async (req, res) => {
       post_type,
       meta,
       author_id,
-      publish_at
+      publish_at,
+      seo_title,
+      seo_description,
+      seo_keywords
     } = req.body
 
     const publishNow = !publish_at || new Date(publish_at) <= new Date()
@@ -231,7 +250,8 @@ router.put('/:id', authenticateToken, async (req, res) => {
     await db.run(
       `UPDATE rdcms_posts
        SET title = ?, slug = ?, content = ?, excerpt = ?, featured_image = ?, featured_image_alt = ?, featured_image_title = ?, featured_image_caption = ?, featured_image_description = ?,
-           category_id = ?, post_type = ?, published = ?, publish_at = ?, author_id = ?, updated_at = CURRENT_TIMESTAMP
+           category_id = ?, post_type = ?, published = ?, publish_at = ?, author_id = ?, updated_at = CURRENT_TIMESTAMP,
+           seo_title = ?, seo_description = ?, seo_keywords = ?
        WHERE id = ?`,
       [
         title,
@@ -248,6 +268,9 @@ router.put('/:id', authenticateToken, async (req, res) => {
         publishValue ? 1 : 0,
         publish_at || null,
         author_id || req.user?.id || null,
+        seo_title || null,
+        seo_description || null,
+        seo_keywords || null,
         req.params.id
       ]
     )
@@ -284,6 +307,35 @@ router.delete('/:id', authenticateToken, async (req, res) => {
   try {
     await db.run('DELETE FROM rdcms_posts WHERE id = ?', [req.params.id])
     await db.run('DELETE FROM rdcms_postmeta WHERE post_id = ?', [req.params.id])
+    res.json({ success: true })
+  } catch (error) {
+    res.status(500).json({ error: error.message })
+  }
+})
+
+router.post('/bulk-delete', authenticateToken, async (req, res) => {
+  try {
+    const { ids } = req.body
+    if (!Array.isArray(ids) || ids.length === 0) {
+      return res.status(400).json({ error: 'IDs array is required' })
+    }
+    const placeholders = ids.map(() => '?').join(',')
+    await db.run(`DELETE FROM rdcms_posts WHERE id IN (${placeholders})`, ids)
+    await db.run(`DELETE FROM rdcms_postmeta WHERE post_id IN (${placeholders})`, ids)
+    res.json({ success: true })
+  } catch (error) {
+    res.status(500).json({ error: error.message })
+  }
+})
+
+router.post('/bulk-publish', authenticateToken, async (req, res) => {
+  try {
+    const { ids, published } = req.body
+    if (!Array.isArray(ids) || ids.length === 0) {
+      return res.status(400).json({ error: 'IDs array is required' })
+    }
+    const placeholders = ids.map(() => '?').join(',')
+    await db.run(`UPDATE rdcms_posts SET published = ? WHERE id IN (${placeholders})`, [published ? 1 : 0, ...ids])
     res.json({ success: true })
   } catch (error) {
     res.status(500).json({ error: error.message })

@@ -16,12 +16,13 @@ export const useContentStore = defineStore('content', () => {
   const navigationMenus = ref([])
   const loading = ref(false)
 
-  async function fetchPosts({ page, limit } = {}) {
+  async function fetchPosts({ page, limit, search } = {}) {
     try {
       loading.value = true
       const params = {}
       if (typeof page !== 'undefined') params.page = page
       if (typeof limit !== 'undefined') params.limit = limit
+      if (typeof search !== 'undefined') params.search = search
 
       const response = await axios.get(`${API_BASE_URL}/api/posts`, { params })
       posts.value = response.data?.data || []
@@ -94,12 +95,33 @@ export const useContentStore = defineStore('content', () => {
     }
   }
 
-  async function fetchPages({ page, limit } = {}) {
+  async function bulkDeletePosts(ids) {
+    try {
+      await axios.post(`${API_BASE_URL}/api/posts/bulk-delete`, { ids })
+      posts.value = posts.value.filter(p => !ids.includes(p.id))
+    } catch (error) {
+      console.error('Failed to bulk delete posts:', error)
+      throw error
+    }
+  }
+
+  async function bulkPublishPosts(ids, published) {
+    try {
+      await axios.post(`${API_BASE_URL}/api/posts/bulk-publish`, { ids, published })
+      await fetchPosts({ page: postsPagination.value.page, limit: postsPagination.value.limit })
+    } catch (error) {
+      console.error('Failed to bulk publish posts:', error)
+      throw error
+    }
+  }
+
+  async function fetchPages({ page, limit, search } = {}) {
     try {
       loading.value = true
       const params = {}
       if (typeof page !== 'undefined') params.page = page
       if (typeof limit !== 'undefined') params.limit = limit
+      if (typeof search !== 'undefined') params.search = search
       if (!Object.keys(params).length) params.limit = 'all'
 
       const response = await axios.get(`${API_BASE_URL}/api/pages`, { params })
@@ -173,11 +195,32 @@ export const useContentStore = defineStore('content', () => {
     }
   }
 
-  async function fetchMedia({ page, limit } = {}) {
+  async function bulkDeletePages(ids) {
+    try {
+      await axios.post(`${API_BASE_URL}/api/pages/bulk-delete`, { ids })
+      pages.value = pages.value.filter(p => !ids.includes(p.id))
+    } catch (error) {
+      console.error('Failed to bulk delete pages:', error)
+      throw error
+    }
+  }
+
+  async function bulkPublishPages(ids, published) {
+    try {
+      await axios.post(`${API_BASE_URL}/api/pages/bulk-publish`, { ids, published })
+      await fetchPages({ page: pagesPagination.value.page, limit: pagesPagination.value.limit })
+    } catch (error) {
+      console.error('Failed to bulk publish pages:', error)
+      throw error
+    }
+  }
+
+  async function fetchMedia({ page, limit, search } = {}) {
     try {
       const params = {}
       if (typeof page !== 'undefined') params.page = page
       if (typeof limit !== 'undefined') params.limit = limit
+      if (typeof search !== 'undefined') params.search = search
       if (!Object.keys(params).length) params.limit = 'all'
 
       const response = await axios.get(`${API_BASE_URL}/api/media`, { params })
@@ -347,12 +390,16 @@ export const useContentStore = defineStore('content', () => {
     createPost,
     updatePost,
     deletePost,
+    bulkDeletePosts,
+    bulkPublishPosts,
     fetchPages,
     fetchPage,
     fetchPageBySlug,
     createPage,
     updatePage,
     deletePage,
+    bulkDeletePages,
+    bulkPublishPages,
     fetchCategories,
     createCategory,
     updateCategory,

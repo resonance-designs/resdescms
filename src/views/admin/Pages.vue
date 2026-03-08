@@ -7,7 +7,8 @@ import {
   IconChevronLeft,
   IconChevronRight,
   IconChevronLeftPipe,
-  IconChevronRightPipe
+  IconChevronRightPipe,
+  IconSearch
 } from '@tabler/icons-vue'
 import { useContentStore } from '../../stores/content'
 
@@ -18,13 +19,31 @@ const pagination = ref({ page: 1, limit: 10, total: 0, pages: 1 })
 const currentPage = ref(1)
 const pageInput = ref(1)
 const perPage = ref(10)
+const searchQuery = ref('')
+const selectedIds = ref([])
+const bulkAction = ref('')
 
 const totalPages = computed(() => pagination.value.pages || 1)
+const allSelected = computed({
+  get: () => pages.value.length > 0 && selectedIds.value.length === pages.value.length,
+  set: (val) => {
+    if (val) {
+      selectedIds.value = pages.value.map(p => p.id)
+    } else {
+      selectedIds.value = []
+    }
+  }
+})
 
 async function loadPages(page = 1) {
   loading.value = true
+  selectedIds.value = []
   try {
-    await contentStore.fetchPages({ page, limit: perPage.value })
+    await contentStore.fetchPages({ 
+      page, 
+      limit: perPage.value,
+      search: searchQuery.value
+    })
     pages.value = contentStore.pages
     pagination.value = contentStore.pagesPagination
     currentPage.value = pagination.value.page
@@ -45,6 +64,11 @@ function formatDate(date) {
 function applyPerPage() {
   const parsed = parseInt(perPage.value, 10)
   perPage.value = parsed > 0 ? parsed : 10
+  pageInput.value = 1
+  changePage(1, true)
+}
+
+function handleSearch() {
   pageInput.value = 1
   changePage(1, true)
 }
@@ -76,26 +100,71 @@ async function deletePage(id) {
     changePage(nextPage)
   }
 }
+
+async function handleBulkAction() {
+  if (selectedIds.value.length === 0 || !bulkAction.value) return
+
+  const count = selectedIds.value.length
+  if (bulkAction.value === 'delete') {
+    if (confirm(`Are you sure you want to delete ${count} pages?`)) {
+      await contentStore.bulkDeletePages(selectedIds.value)
+      loadPages(currentPage.value)
+    }
+  } else if (bulkAction.value === 'publish') {
+    await contentStore.bulkPublishPages(selectedIds.value, true)
+    loadPages(currentPage.value)
+  } else if (bulkAction.value === 'unpublish') {
+    await contentStore.bulkPublishPages(selectedIds.value, false)
+    loadPages(currentPage.value)
+  }
+  bulkAction.value = ''
+}
 </script>
 
 <template>
   <div>
     <div class="mb-6 flex flex-col md:flex-row md:items-center md:justify-between gap-3">
-      <div class="flex items-center gap-2">
-        <label class="text-sm text-gray-700">Pages per page:</label>
-        <input
-          v-model.number="perPage"
-          type="number"
-          min="1"
-          class="border rounded px-3 py-2 w-24"
-          @keyup.enter.prevent="applyPerPage"
-        >
-        <button
-          @click="applyPerPage"
-          class="bg-gray-800 text-white px-3 py-2 rounded hover:bg-gray-700 transition cursor-pointer"
-        >
-          Apply
-        </button>
+      <div class="flex flex-col md:flex-row items-start md:items-center gap-4">
+        <div class="flex items-center gap-2">
+          <label class="text-sm text-gray-700">Pages per page:</label>
+          <input
+            v-model.number="perPage"
+            type="number"
+            min="1"
+            class="border rounded px-3 py-2 w-24 bg-white"
+            @keyup.enter.prevent="applyPerPage"
+          >
+          <button
+            @click="applyPerPage"
+            class="bg-gray-800 text-white px-3 py-2 rounded hover:bg-gray-700 transition cursor-pointer"
+          >
+            Apply
+          </button>
+        </div>
+
+        <div class="relative w-full md:w-64">
+          <span class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-gray-400">
+            <IconSearch size="18" />
+          </span>
+          <input
+            v-model="searchQuery"
+            type="text"
+            placeholder="Search pages..."
+            class="block w-full pl-10 pr-3 py-2 border rounded bg-white focus:ring-rd-orange focus:border-rd-orange"
+            @keyup.enter="handleSearch"
+          >
+        </div>
+
+        <div v-if="selectedIds.length > 0" class="flex items-center gap-2 bg-rd-orange/10 px-3 py-2 rounded border border-rd-orange/20 animate-fade-in">
+          <span class="text-xs font-semibold text-rd-orange whitespace-nowrap">{{ selectedIds.length }} selected</span>
+          <select v-model="bulkAction" class="text-xs border rounded px-2 py-1 bg-white">
+            <option value="">Bulk Actions</option>
+            <option value="publish">Publish</option>
+            <option value="unpublish">Unpublish</option>
+            <option value="delete">Delete</option>
+          </select>
+          <button @click="handleBulkAction" class="bg-rd-orange text-white text-xs px-3 py-1 rounded hover:bg-rd-orange-light">Apply</button>
+        </div>
       </div>
       <RouterLink to="/admin/pages/new" class="bg-rd-orange text-white px-4 py-2 rounded hover:bg-rd-orange-light transition">
         + New Page
@@ -108,6 +177,9 @@ async function deletePage(id) {
       <table v-else class="w-full">
         <thead class="bg-gray-100 border-b bg-rd-orange">
           <tr>
+            <th class="px-6 py-3 text-left w-10">
+              <input type="checkbox" v-model="allSelected" class="rounded text-rd-orange focus:ring-rd-orange">
+            </th>
             <th class="px-6 py-3 text-left text-sm font-semibold text-gray-900">Title</th>
             <th class="px-6 py-3 text-left text-sm font-semibold text-gray-900">Category</th>
             <th class="px-6 py-3 text-left text-sm font-semibold text-gray-900">Status</th>
@@ -116,7 +188,10 @@ async function deletePage(id) {
           </tr>
         </thead>
         <tbody>
-          <tr v-for="page in pages" :key="page.id" class="border-b hover:bg-gray-50">
+          <tr v-for="page in pages" :key="page.id" class="border-b hover:bg-gray-50" :class="{'bg-rd-orange/5': selectedIds.includes(page.id)}">
+            <td class="px-6 py-4">
+              <input type="checkbox" v-model="selectedIds" :value="page.id" class="rounded text-rd-orange focus:ring-rd-orange">
+            </td>
             <td class="px-6 py-4 text-gray-900 font-medium">{{ page.title }}</td>
             <td class="px-6 py-4 text-gray-600 text-sm">{{ page.category_name || 'Uncategorized' }}</td>
             <td class="px-6 py-4 text-sm">

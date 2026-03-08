@@ -29,7 +29,10 @@ const form = ref({
   featured_image_alt: '',
   featured_image_title: '',
   featured_image_caption: '',
-  featured_image_description: ''
+  featured_image_description: '',
+  seo_title: '',
+  seo_description: '',
+  seo_keywords: ''
 })
 const slugEdited = ref(false)
 const mediaModalOpen = ref(false)
@@ -82,6 +85,9 @@ onMounted(async () => {
       form.value.featured_image_title = post.featured_image_title || ''
       form.value.featured_image_caption = post.featured_image_caption || ''
       form.value.featured_image_description = post.featured_image_description || ''
+      form.value.seo_title = post.seo_title || ''
+      form.value.seo_description = post.seo_description || ''
+      form.value.seo_keywords = post.seo_keywords || ''
       slugEdited.value = true
     }
   }
@@ -313,6 +319,24 @@ function saveFeaturedFields(fields) {
           <input v-model="form.published" type="checkbox" class="mr-2">
           <span class="text-sm text-gray-900">Publish this post</span>
         </label>
+
+        <hr class="border-gray-200">
+
+        <div class="space-y-4 pt-2">
+          <h4 class="text-sm font-semibold text-gray-900 uppercase tracking-wider">SEO Settings</h4>
+          <div>
+            <label class="block text-xs font-medium text-gray-700 mb-1">SEO Title</label>
+            <input v-model="form.seo_title" type="text" class="w-full px-3 py-2 text-sm border rounded bg-gray-50 focus:bg-white" placeholder="Meta title">
+          </div>
+          <div>
+            <label class="block text-xs font-medium text-gray-700 mb-1">Meta Description</label>
+            <textarea v-model="form.seo_description" class="w-full px-3 py-2 text-sm border rounded bg-gray-50 focus:bg-white" rows="3" placeholder="Meta description"></textarea>
+          </div>
+          <div>
+            <label class="block text-xs font-medium text-gray-700 mb-1">Keywords</label>
+            <input v-model="form.seo_keywords" type="text" class="w-full px-3 py-2 text-sm border rounded bg-gray-50 focus:bg-white" placeholder="keyword1, keyword2">
+          </div>
+        </div>
       </div>
       <div class="flex gap-3 mt-6">
         <button type="submit" class="bg-rd-orange text-white cursor-pointer px-6 py-2 rounded hover:bg-rd-orange-light transition">

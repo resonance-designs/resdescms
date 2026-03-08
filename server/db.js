@@ -294,6 +294,9 @@ function addMissingColumns() {
   ensureColumn('rdcms_pages', 'featured_image_title', 'TEXT')
   ensureColumn('rdcms_pages', 'featured_image_caption', 'TEXT')
   ensureColumn('rdcms_pages', 'featured_image_description', 'TEXT')
+  ensureColumn('rdcms_pages', 'seo_title', 'TEXT')
+  ensureColumn('rdcms_pages', 'seo_description', 'TEXT')
+  ensureColumn('rdcms_pages', 'seo_keywords', 'TEXT')
 
   ensureColumn('rdcms_media', 'uploaded_by', 'INTEGER')
   ensureColumn('rdcms_media', 'alt_text', 'TEXT')
@@ -307,6 +310,9 @@ function addMissingColumns() {
   ensureColumn('rdcms_posts', 'featured_image_title', 'TEXT')
   ensureColumn('rdcms_posts', 'featured_image_caption', 'TEXT')
   ensureColumn('rdcms_posts', 'featured_image_description', 'TEXT')
+  ensureColumn('rdcms_posts', 'seo_title', 'TEXT')
+  ensureColumn('rdcms_posts', 'seo_description', 'TEXT')
+  ensureColumn('rdcms_posts', 'seo_keywords', 'TEXT')
 }
 function seedDefaults() {
   const defaultPosts = [
